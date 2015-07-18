@@ -10,6 +10,8 @@
 #include "tester_io.h"
 #include "debug.h"
 
+#include "data.h"
+
 
 char chipName[32];
 
@@ -48,25 +50,11 @@ bool TestData(uint8_t **ptr) {
 			case CMD_RESET_FULL:		// переводит все пины в режим чтения (включая нижние)
 				TesterReset(true);
 				break;
-			case CMD_INIT_14:			// (mask[2]) настраивает порты ввода-вывода
-				{
-					uint16_t mask = pgm_read_word(*ptr);
-					*ptr += 2;
-					TesterConfig14(mask);
-				}
-				break;
 			case CMD_INIT_16:			// (mask[2]) настраивает порты ввода-вывода
 				{
 					uint16_t mask = pgm_read_word(*ptr);
-					ptr += 2;
+					*ptr += 2;
 					TesterConfig16(mask);
-				}
-				break;
-			case CMD_INIT_20:			// (mask[3]) настраивает порты ввода-вывода
-				{
-					uint32_t mask = pgm_read_3bytes(*ptr);
-					ptr += 3;
-					TesterConfig20(mask);
 				}
 				break;
 			case CMD_INIT_28:			// (mask[3]) настраивает порты ввода-вывода
@@ -74,15 +62,6 @@ bool TestData(uint8_t **ptr) {
 					uint32_t mask = pgm_read_3bytes(*ptr);
 					*ptr += 3;
 					TesterConfig28(mask);
-				}
-				break;
-			case CMD_SET_14:			// (mask0[2], mask1[2]) выставляет логические 0 и 1 на выводах по маскам
-				{
-					uint16_t mask0 = pgm_read_word(*ptr);
-					*ptr += 2;
-					uint16_t mask1 = pgm_read_word(*ptr);
-					*ptr += 2;
-					TesterSet14(mask0, mask1);
 				}
 				break;
 			case CMD_SET_16:			// (mask0[2], mask1[2]) выставляет логические 0 и 1 на выводах по маскам
@@ -94,15 +73,6 @@ bool TestData(uint8_t **ptr) {
 					TesterSet16(mask0, mask1);
 				}			
 				break;
-			case CMD_SET_20:			// (mask0[3], mask1[3]) выставляет логические 0 и 1 на выводах по маскам
-				{
-					uint32_t mask0 = pgm_read_3bytes(*ptr);
-					*ptr += 3;
-					uint32_t mask1 = pgm_read_3bytes(*ptr);
-					*ptr += 3;
-					TesterSet20(mask0, mask1);
-				}
-				break;
 			case CMD_SET_28:			// (mask0[3], mask1[3]) выставляет логические 0 и 1 на выводах по маскам
 				{
 					uint32_t mask0 = pgm_read_3bytes(*ptr);
@@ -110,21 +80,6 @@ bool TestData(uint8_t **ptr) {
 					uint32_t mask1 = pgm_read_3bytes(*ptr);
 					*ptr += 3;
 					TesterSet28(mask0, mask1);
-				}
-				break;
-			case CMD_TEST_14:			// (mask0[2], mask1[2]) проверяет, что на выводах установлен ожидаемый уровень
-				{
-					uint16_t mask0 = pgm_read_word(*ptr);
-					*ptr += 2;
-					uint16_t mask1 = pgm_read_word(*ptr);
-					*ptr += 2;
-					if (TesterTest14(mask0, mask1)) {
-MSG("success");
-						succesCnt++;
-					} else {
-MSG("fail");
-						failureCnt++;
-					}
 				}
 				break;
 			case CMD_TEST_16:			// (mask0[2], mask1[2]) проверяет, что на выводах установлен ожидаемый уровень
@@ -138,19 +93,6 @@ MSG("success");
 						succesCnt++;
 					} else {
 MSG("fail");
-						failureCnt++;
-					}
-				}
-				break;
-			case CMD_TEST_20:			// (mask0[3], mask1[3]) проверяет, что на выводах установлен ожидаемый уровень
-				{
-					uint32_t mask0 = pgm_read_3bytes(*ptr);
-					*ptr += 3;
-					uint32_t mask1 = pgm_read_3bytes(*ptr);
-					*ptr += 3;
-					if (TesterTest20(mask0, mask1)) {
-						succesCnt++;
-					} else {
 						failureCnt++;
 					}
 				}
@@ -175,7 +117,7 @@ MSG("fail");
 	}
 }
 
-
+/*
 #define val16(v)	((v) & 0xff), ((v) >> 8)
 
 #define _(v)		(1 << (v-1))
@@ -209,10 +151,25 @@ const uint8_t LOGIC_DATA[] PROGMEM = {
 	CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
 	CMD_END,	
 	
+	// 155 ЛА 18
+	'L', 'A', '1', '8', 0,
+	CMD_RESET,
+	CMD_INIT_14,	val16(_(1)|_(2)|_(4)|_(5)|_(7)|_(9)|_(10)|_(12)|_(13)|_(14)),
+	CMD_SET_14,		val16(_(7)),   val16(_(14)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)|_(3)|_(6)|_(8)|_(11)),
+	CMD_TEST_14,	val16(_(3)|_(6)|_(8)|_(11)),   val16(0),
+	CMD_SET_14,		val16(_(7)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)),   val16(_(14)|_(3)|_(6)|_(8)|_(11)),
+	CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
+	CMD_SET_14,		val16(_(7)|_(2)|_(5)|_(10)|_(13)),   val16(_(14)|_(1)|_(4)|_(9)|_(12)|_(3)|_(6)|_(8)|_(11)),
+	CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
+	CMD_SET_14,		val16(_(7)|_(1)|_(4)|_(9)|_(12)),   val16(_(14)|_(2)|_(5)|_(10)|_(13)|_(3)|_(6)|_(8)|_(11)),
+	CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
+	CMD_END,
+	
+	
 	CMD_END	
 };
 
-
+*/
 
 
 

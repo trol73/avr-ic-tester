@@ -57,9 +57,10 @@ void TesterReset(bool fullMode) {
 
 #define map_bit(maskBit, dest, destBit)		if (mask & _BV(maskBit)) dest |= _BV(destBit); else dest &= ~_BV(destBit)
 
-void TesterConfig14(uint16_t mask) {
+
+void TesterConfig16(uint16_t mask) {
 	//MSG_HEX("configure ", mask, 2);
-	// D6 D5 D4 D3 D2 A7 A6    C5 C4 C3 C2 C1 C0 D7
+	// D6 D5 D4 D3 D2 A7 A6 A5   C6 C5 C4 C3 C2 C1 C0 D7
 	uint8_t d = DDRD;
 	uint8_t a = DDRA;
 	uint8_t c = DDRC;
@@ -71,35 +72,32 @@ void TesterConfig14(uint16_t mask) {
 	map_bit(4, d, 2);
 	map_bit(5, a, 7);
 	map_bit(6, a, 6);
-	map_bit(7, c, 5);
-	map_bit(8, c, 4);
-	map_bit(9, c, 3);
-	map_bit(10, c, 2);
-	map_bit(11, c, 1);
-	map_bit(12, c, 0);
-	map_bit(13, d, 7);
+	map_bit(7, a, 5);
+	map_bit(8, c, 6);
+	map_bit(9, c, 5);
+	map_bit(10, c, 4);
+	map_bit(11, c, 3);
+	map_bit(12, c, 2);
+	map_bit(13, c, 1);
+	map_bit(14, c, 0);
+	map_bit(15, d, 7);
 
 	DDRD = d;
 	DDRC = c;
 	DDRA = a;
 }
 
-void TesterConfig16(uint16_t mask) {
-	
-}
-
-void TesterConfig20(uint32_t mask) {
-	
-}
 
 void TesterConfig28(uint32_t mask) {
-	
+
 }
 
 #define map_set(maskBit, dest, destBit)		if (mask0 & _BV(maskBit)) dest &= ~_BV(destBit); else if (mask1 & _BV(maskBit)) dest |= _BV(destBit);
 
-void TesterSet14(uint16_t mask0, uint16_t mask1) {
-	// D6 D5 D4 D3 D2 A7 A6    C5 C4 C3 C2 C1 C0 D7
+
+
+void TesterSet16(uint16_t mask0, uint16_t mask1) {
+	// D6 D5 D4 D3 D2 A7 A6 A5   C6 C5 C4 C3 C2 C1 C0 D7
 	
 	uint8_t d = PORTD;
 	uint8_t c = PORTC;
@@ -112,27 +110,21 @@ void TesterSet14(uint16_t mask0, uint16_t mask1) {
 	map_set(4, d, 2);
 	map_set(5, a, 7);
 	map_set(6, a, 6);
-	map_set(7, c, 5);
-	map_set(8, c, 4);
-	map_set(9, c, 3);
-	map_set(10, c, 2);
-	map_set(11, c, 1);
-	map_set(12, c, 0);
-	map_set(13, d, 7);
+	map_set(7, a, 5);
+	map_set(8, c, 6);	
+	map_set(9, c, 5);
+	map_set(10, c, 4);
+	map_set(11, c, 3);
+	map_set(12, c, 2);
+	map_set(13, c, 1);
+	map_set(14, c, 0);
+	map_set(15, d, 7);
 	
 	PORTD = d;
 	PORTC = c;
-	PORTA = a;	
+	PORTA = a;
 }
 
-
-void TesterSet16(uint16_t mask0, uint16_t mask1) {
-
-}
-
-void TesterSet20(uint32_t mask0, uint32_t mask1) {
-
-}
 
 void TesterSet28(uint32_t mask0, uint32_t mask1) {
 
@@ -142,7 +134,9 @@ void TesterSet28(uint32_t mask0, uint32_t mask1) {
 #define map_test(maskBit, pin, pinBit)		if (mask0 & _BV(maskBit)) {	if (pin & _BV(pinBit)) result = false; } else if (mask1 & _BV(maskBit)) { if (!(pin & _BV(pinBit))) result = false;	}
 
 
-bool TesterTest14(uint16_t mask0, uint16_t mask1) {
+
+bool TesterTest16(uint16_t mask0, uint16_t mask1) {
+	// D6 D5 D4 D3 D2 A7 A6 A5   C6 C5 C4 C3 C2 C1 C0 D7
 	bool result = true;
 	
 	map_test(0, PIND, 6);
@@ -151,27 +145,20 @@ bool TesterTest14(uint16_t mask0, uint16_t mask1) {
 	map_test(3, PIND, 3);
 	map_test(4, PIND, 2);
 	map_test(5, PINA, 7);
-	map_test(6, PINA, 6);
-	map_test(7, PINC, 5);
-	map_test(8, PINC, 4);
-	map_test(9, PINC, 3);
-	map_test(10, PINC, 2);
-	map_test(11, PINC, 1);
-	map_test(12, PINC, 0);
-	map_test(13, PIND, 7);
+	map_test(6, PINA, 6);		
+	map_test(7, PINA, 5);	
+	map_test(8, PINC, 6);		
+	map_test(9, PINC, 5);
+	map_test(10, PINC, 4);
+	map_test(11, PINC, 3);
+	map_test(12, PINC, 2);
+	map_test(13, PINC, 1);
+	map_test(14, PINC, 0);
+	map_test(15, PIND, 7);
 	
-	//MSG_HEX("test D ", PIND, 1);
-	//MSG_HEX("test A ", PINA, 1);
-	//MSG_HEX("test C ", PINC, 1);
 	MSG_DEC("test ", (uint8_t)result);
 	
 	TesterDebugStatus();
-	
-	return result;
-}
-
-bool TesterTest16(uint16_t mask0, uint16_t mask1) {
-	bool result = true;
 	
 	return result;
 }
@@ -194,7 +181,7 @@ bool IsFullMode() {
 
 
 void TesterDebugStatus() {
-	// D6 D5 D4 D3 D2 A7 A6    C5 C4 C3 C2 C1 C0 D7
+	// D6 D5 D4 D3 D2 A7 A6 A5    C6 C5 C4 C3 C2 C1 C0 D7
 	
 	uart_putdw_dec(1); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(6) ? '1' : '0'); uart_putc(PORTD & _BV(6) ? '1' : '0'); uart_putc(PIND & _BV(6) ? '1' : '0'); 
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');

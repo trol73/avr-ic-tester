@@ -5,7 +5,7 @@ import sys
 __author__ = 'trol'
 
 src = 'data.ic'
-out = 'data.h'
+out = '../ic-tester/data.h'
 
 if len(sys.argv) == 2:
     src = sys.argv[1]

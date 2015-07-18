@@ -28,26 +28,20 @@ void TesterReset(bool fullMode);
   Младший бит соответствует первому пину, старший - последнему
   Пин конфигурируется на запись если бит установлен                    
 ************************************************************************/
-void TesterConfig14(uint16_t mask);
 void TesterConfig16(uint16_t mask);
-void TesterConfig20(uint32_t mask);
 void TesterConfig28(uint32_t mask);
 
 
 /************************************************************************
   Устанавливает пины по маске mask1 и сбрасывает по маске mask0
 ************************************************************************/
-void TesterSet14(uint16_t mask0, uint16_t mask1);
 void TesterSet16(uint16_t mask0, uint16_t mask1);
-void TesterSet20(uint32_t mask0, uint32_t mask1);
 void TesterSet28(uint32_t mask0, uint32_t mask1);
 
 /************************************************************************
   Проверяет, что биты маски mask1 установлены, а биты маски mask0 сброшены
 ************************************************************************/
-bool TesterTest14(uint16_t mask0, uint16_t mask1);
 bool TesterTest16(uint16_t mask0, uint16_t mask1);
-bool TesterTest20(uint32_t mask0, uint32_t mask1);
 bool TesterTest28(uint32_t mask0, uint32_t mask1);
 
 
