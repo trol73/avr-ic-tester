@@ -113,6 +113,9 @@
     <Compile Include="debug.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="i18n.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ic-tester.c">
       <SubType>compile</SubType>
     </Compile>
@@ -189,9 +192,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\glcd\graphs.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="lib\glcd\tester.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\glcd\text.c">

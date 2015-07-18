@@ -21,7 +21,11 @@ def str_to_int_list(s):
         st = itm.strip()
         if len(st) == 0:
             continue
-        result.append(int(st))
+        try:
+            result.append(int(st))
+        except ValueError:
+            print 'ERROR: wrong numbers list: ', s
+            sys.exit(-1)
     return result
 
 
@@ -108,7 +112,7 @@ class Chip:
         elif s.startswith('POWER:'):
             power = s[len('POWER:'):].split(' ')
             for p in power:
-                if len(p) == 0:
+                if len(p.strip()) == 0:
                     continue
                 if p[0] == '-':
                     self.powerMinus.append(int(p[1:]))

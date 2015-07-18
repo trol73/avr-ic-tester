@@ -158,16 +158,13 @@ bool TesterTest16(uint16_t mask0, uint16_t mask1) {
 	
 	MSG_DEC("test ", (uint8_t)result);
 	
-	TesterDebugStatus();
+	if (!result) {
+		TesterDebugStatus();
+	}
 	
 	return result;
 }
 
-bool TesterTest20(uint32_t mask0, uint32_t mask1) {
-	bool result = true;
-	
-	return result;
-}
 
 bool TesterTest28(uint32_t mask0, uint32_t mask1) {
 	bool result = true;

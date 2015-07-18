@@ -34,7 +34,7 @@ bool TestLogic();
 ************************************************************************/
 bool TestData(uint8_t **buffer);
 
-const char* GetDeviceName();
+char* GetDeviceName();
 
 
 

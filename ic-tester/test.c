@@ -70,7 +70,9 @@ bool TestData(uint8_t **ptr) {
 					*ptr += 2;
 					uint16_t mask1 = pgm_read_word(*ptr);
 					*ptr += 2;
-					TesterSet16(mask0, mask1);
+					if (failureCnt == 0) {
+						TesterSet16(mask0, mask1);
+					}
 				}			
 				break;
 			case CMD_SET_28:			// (mask0[3], mask1[3]) выставляет логические 0 и 1 на выводах по маскам
@@ -79,7 +81,9 @@ bool TestData(uint8_t **ptr) {
 					*ptr += 3;
 					uint32_t mask1 = pgm_read_3bytes(*ptr);
 					*ptr += 3;
-					TesterSet28(mask0, mask1);
+					if (failureCnt == 0) {
+						TesterSet28(mask0, mask1);
+					}
 				}
 				break;
 			case CMD_TEST_16:			// (mask0[2], mask1[2]) проверяет, что на выводах установлен ожидаемый уровень
@@ -88,12 +92,14 @@ bool TestData(uint8_t **ptr) {
 					*ptr += 2;
 					uint16_t mask1 = pgm_read_word(*ptr);
 					*ptr += 2;
-					if (TesterTest16(mask0, mask1)) {
-MSG("success");
-						succesCnt++;
-					} else {
-MSG("fail");
-						failureCnt++;
+					if (failureCnt == 0) {
+						if (TesterTest16(mask0, mask1)) {
+	MSG("success");
+							succesCnt++;
+						} else {
+	MSG("fail");
+							failureCnt++;
+						}
 					}
 				}
 				break;
@@ -103,10 +109,12 @@ MSG("fail");
 					*ptr += 3;
 					uint32_t mask1 = pgm_read_3bytes(*ptr);
 					*ptr += 3;
-					if (TesterTest28(mask0, mask1)) {
-						succesCnt++;
-					} else {
-						failureCnt++;
+					if (failureCnt == 0) {
+						if (TesterTest28(mask0, mask1)) {
+							succesCnt++;
+						} else {
+							failureCnt++;
+						}
 					}
 				}
 				break;
@@ -191,6 +199,6 @@ bool TestLogic() {
 	return false;
 }
 
-const char* GetDeviceName() {
+char* GetDeviceName() {
 	return chipName;
 }
