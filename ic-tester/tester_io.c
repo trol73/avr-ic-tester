@@ -159,7 +159,7 @@ bool TesterTest16(uint16_t mask0, uint16_t mask1) {
 	MSG_DEC("test ", (uint8_t)result);
 	
 	if (!result) {
-		TesterDebugStatus();
+		TesterDebugStatus(16);
 	}
 	
 	return result;
@@ -177,41 +177,50 @@ bool IsFullMode() {
 }
 
 
-void TesterDebugStatus() {
+void TesterDebugStatus(uint8_t pins) {
 	// D6 D5 D4 D3 D2 A7 A6 A5    C6 C5 C4 C3 C2 C1 C0 D7
+	
+	uint8_t delta = 16 - pins;
 	
 	uart_putdw_dec(1); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(6) ? '1' : '0'); uart_putc(PORTD & _BV(6) ? '1' : '0'); uart_putc(PIND & _BV(6) ? '1' : '0'); 
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(14); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(7) ? '1' : '0'); uart_putc(PORTD & _BV(7) ? '1' : '0'); uart_putc(PIND & _BV(7) ? '1' : '0'); 
+	uart_putdw_dec(16-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(7) ? '1' : '0'); uart_putc(PORTD & _BV(7) ? '1' : '0'); uart_putc(PIND & _BV(7) ? '1' : '0'); 
 	uart_putc('\n');
 	
 	uart_putdw_dec(2); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(5) ? '1' : '0'); uart_putc(PORTD & _BV(5) ? '1' : '0'); uart_putc(PIND & _BV(5) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(13); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(0) ? '1' : '0'); uart_putc(PORTC & _BV(0) ? '1' : '0'); uart_putc(PINC & _BV(0) ? '1' : '0');
+	uart_putdw_dec(15-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(0) ? '1' : '0'); uart_putc(PORTC & _BV(0) ? '1' : '0'); uart_putc(PINC & _BV(0) ? '1' : '0');
 	uart_putc('\n');
 	
 	uart_putdw_dec(3); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(4) ? '1' : '0'); uart_putc(PORTD & _BV(4) ? '1' : '0'); uart_putc(PIND & _BV(4) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(12); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(1) ? '1' : '0'); uart_putc(PORTC & _BV(1) ? '1' : '0'); uart_putc(PINC & _BV(1) ? '1' : '0');
+	uart_putdw_dec(14-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(1) ? '1' : '0'); uart_putc(PORTC & _BV(1) ? '1' : '0'); uart_putc(PINC & _BV(1) ? '1' : '0');
 	uart_putc('\n');
 	
 	uart_putdw_dec(4); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(3) ? '1' : '0'); uart_putc(PORTD & _BV(3) ? '1' : '0'); uart_putc(PIND & _BV(3) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(11); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(2) ? '1' : '0'); uart_putc(PORTC & _BV(2) ? '1' : '0'); uart_putc(PINC & _BV(2) ? '1' : '0');
+	uart_putdw_dec(13-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(2) ? '1' : '0'); uart_putc(PORTC & _BV(2) ? '1' : '0'); uart_putc(PINC & _BV(2) ? '1' : '0');
 	uart_putc('\n');
 	
 	uart_putdw_dec(5); uart_putc(':'); uart_putc(' '); uart_putc(DDRD & _BV(2) ? '1' : '0'); uart_putc(PORTD & _BV(2) ? '1' : '0'); uart_putc(PIND & _BV(2) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(10); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(3) ? '1' : '0'); uart_putc(PORTC & _BV(3) ? '1' : '0'); uart_putc(PINC & _BV(3) ? '1' : '0');
+	uart_putdw_dec(12-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(3) ? '1' : '0'); uart_putc(PORTC & _BV(3) ? '1' : '0'); uart_putc(PINC & _BV(3) ? '1' : '0');
 	uart_putc('\n');
 	
 	uart_putdw_dec(6); uart_putc(':'); uart_putc(' '); uart_putc(DDRA & _BV(7) ? '1' : '0'); uart_putc(PORTA & _BV(7) ? '1' : '0'); uart_putc(PINA & _BV(7) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(9); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(4) ? '1' : '0'); uart_putc(PORTC & _BV(4) ? '1' : '0'); uart_putc(PINC & _BV(4) ? '1' : '0');
+	uart_putdw_dec(11-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(4) ? '1' : '0'); uart_putc(PORTC & _BV(4) ? '1' : '0'); uart_putc(PINC & _BV(4) ? '1' : '0');
 	uart_putc('\n');
 	
 	uart_putdw_dec(7); uart_putc(':'); uart_putc(' '); uart_putc(DDRA & _BV(6) ? '1' : '0'); uart_putc(PORTA & _BV(6) ? '1' : '0'); uart_putc(PINA & _BV(6) ? '1' : '0');
 	uart_putc(' '); uart_putc(' '); uart_putc(' '); uart_putc(' ');
-	uart_putdw_dec(8); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(5) ? '1' : '0'); uart_putc(PORTC & _BV(5) ? '1' : '0'); uart_putc(PINC & _BV(5) ? '1' : '0');
+	uart_putdw_dec(10-delta); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(5) ? '1' : '0'); uart_putc(PORTC & _BV(5) ? '1' : '0'); uart_putc(PINC & _BV(5) ? '1' : '0');
 	uart_putc('\n');
+	
+	if (pins == 16) {
+		uart_putdw_dec(8); uart_putc(':'); uart_putc(' '); uart_putc(DDRA & _BV(5) ? '1' : '0'); uart_putc(PORTA & _BV(5) ? '1' : '0'); uart_putc(PINA & _BV(5) ? '1' : '0');
+		uart_putc(' '); uart_putc(' '); uart_putc(' '); uart_putc(' ');
+		uart_putdw_dec(9); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(6) ? '1' : '0'); uart_putc(PORTC & _BV(6) ? '1' : '0'); uart_putc(PINC & _BV(6) ? '1' : '0');
+		uart_putc('\n');	
+	}
 }

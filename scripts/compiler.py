@@ -14,9 +14,9 @@ print 'compile', src, 'to', out
 
 
 # парсит массив чисел
-def str_to_int_list(s):
+def str_to_int_list(arg):
     result = []
-    lst = s.split(',')
+    lst = arg.split(',')
     for itm in lst:
         st = itm.strip()
         if len(st) == 0:
@@ -24,7 +24,7 @@ def str_to_int_list(s):
         try:
             result.append(int(st))
         except ValueError:
-            print 'ERROR: wrong numbers list: ', s
+            print 'ERROR: wrong numbers list: ', arg
             sys.exit(-1)
     return result
 
@@ -71,14 +71,21 @@ class Command:
     name = None
     lst0 = []
     lst1 = []
+    lst0_2 = []
+    lst1_2 = []
 
     def __init__(self, name):
         self.name = name
         self.lst0 = []
         self.lst1 = []
+        self.lst0_2 = []
+        self.lst1_2 = []
 
     def show(self):
-        print '#', self.name, self.lst0, self.lst1
+        if len(self.lst0_2) + len(self.lst1_2) > 0:
+            print '#', self.name, self.lst0, self.lst1, ' => ', self.lst0_2, self.lst1_2
+        else:
+            print '#', self.name, self.lst0, self.lst1
 
 
 class Chip:
@@ -99,18 +106,18 @@ class Chip:
         self.pullUpOutputs = []
         self.commands = []
 
-    def load_line(self, s):
-        if s.startswith('CHIP['):
-            pins = s[len('CHIP['):]
+    def load_line(self, line):
+        if line.startswith('CHIP['):
+            pins = line[len('CHIP['):]
             pins = pins[:pins.find(']')]
             self.pins = int(pins)
-            name = s[s.find("'"):]
+            name = line[line.find("'"):]
             if name[0] != "'" or name[len(name) - 1] != "'":
                 print 'ERROR: name expected'
                 sys.exit(-1)
             self.name = name[1:-1]
-        elif s.startswith('POWER:'):
-            power = s[len('POWER:'):].split(' ')
+        elif line.startswith('POWER:'):
+            power = line[len('POWER:'):].split(' ')
             for p in power:
                 if len(p.strip()) == 0:
                     continue
@@ -118,55 +125,151 @@ class Chip:
                     self.powerMinus.append(int(p[1:]))
                 elif p[0] == '+':
                     self.powerPlus.append(int(p[1:]))
-        elif s.startswith('IN:'):
-            inputs = s[len('IN:'):].split(',')
+        elif line.startswith('IN:'):
+            inputs = line[len('IN:'):].split(',')
             for inp in inputs:
                 name = inp.strip()
                 if len(name) == 0:
                     continue
-                self.inputs.append(int(name))
-        elif s.startswith('OUT:'):
-            outputs = s[len('OUT:'):].split(',')
+                n = int(name)
+                if n > self.pins:
+                    print 'ERROR: wrong pin number', n, 'for DIP-'+str(self.pins)
+                    sys.exit(-1)
+                self.inputs.append(n)
+        elif line.startswith('OUT:'):
+            outputs = line[len('OUT:'):].split(',')
             for out in outputs:
                 name = out.strip()
                 if len(name) == 0:
                     continue
                 if name[0] == '@':
-                    self.outputs.append(int(name[1:]))
-                    self.pullUpOutputs.append(int(name[1:]))
+                    n = int(name[1:])
+                    if n > self.pins:
+                        print 'ERROR: wrong pin number', n, 'for DIP-'+str(self.pins)
+                        sys.exit(-1)
+                    self.outputs.append(n)
+                    self.pullUpOutputs.append(n)
                 else:
-                    self.outputs.append(int(name))
-        elif s.startswith('SET:'):
+                    n = int(name)
+                    if n > self.pins:
+                        print 'ERROR: wrong pin number', n, 'for DIP-'+str(self.pins)
+                        sys.exit(-1)
+                    self.outputs.append(n)
+        elif line.startswith('SET:'):
             cmd = Command('set')
-            lst = s[len('SET:'):].split(';')
-            for lsts in lst:
-                itm = lsts.strip()
-                level = itm.split('->')[0].strip()
-                pins = itm.split('->')[1].strip()
-                if level == '0':
-                    cmd.lst0 = str_to_int_list(pins)
-                elif level == '1':
-                    cmd.lst1 = str_to_int_list(pins)
+            sc = line[len('SET:'):].strip()
+            if sc.find('->') > 0:
+                lst = sc.split(';')
+                for lsts in lst:
+                    itm = lsts.strip()
+                    level = itm.split('->')[0].strip()
+                    pins = itm.split('->')[1].strip()
+                    if level == '0':
+                        cmd.lst0 = str_to_int_list(pins)
+                    elif level == '1':
+                        cmd.lst1 = str_to_int_list(pins)
+                    else:
+                        print 'ERROR: invalid level ' + level
+                        sys.exit(-1)
+            else:
+                if len(sc) == len(self.inputs):
+                    index = 0
+                    list1 = ''
+                    list0 = ''
+                    for inp in self.inputs:
+                        if sc[index] == '1':
+                            list1 = list1 + str(inp) + ','
+                        elif sc[index] == '0':
+                            list0 = list0 + str(inp) + ','
+                        else:
+                            print 'ERROR: wrong level', sc[index]
+                            sys.exit(-1)
+                        index += 1
+                    cmd.lst0 = str_to_int_list(list0)
+                    cmd.lst1 = str_to_int_list(list1)
                 else:
-                    print 'ERROR: invalid level ' + level
+                    print 'ERROR: SET syntax error'
                     sys.exit(-1)
 
             self.commands.append(cmd)
 
-        elif s.startswith('TEST:'):
+        elif line.startswith('TEST:'):
             cmd = Command('test')
+            sc = line[len('TEST:'):].strip()
+            if sc.find('->') > 0:
+                lst = sc.split(';')
+                for lsts in lst:
+                    itm = lsts.strip()
+                    pins = itm.split('->')[0].strip()
+                    level = itm.split('->')[1].strip()
+                    if level == '0':
+                        cmd.lst0 = str_to_int_list(pins)
+                    elif level == '1':
+                        cmd.lst1 = str_to_int_list(pins)
+                    else:
+                        print 'ERROR: invalid level ' + level
+                        sys.exit(-1)
+            elif sc.find('=>') > 0:
+                cmd.name = 'set+test'
+                # команда вида TEST: xxxx => yyyyyyyy
+                args = sc.split('=>')
+                from_val = args[0].strip()
+                to_val = args[1].strip()
+                if len(from_val) != len(self.inputs):
+                    print 'ERROR: TEST syntax error:', from_val
+                    sys.exit(-1)
+                if len(to_val) != len(self.outputs):
+                    print 'ERROR: TEST syntax error:', to_val
+                    sys.exit(-1)
 
-            lst = s[len('TEST:'):].split(';')
-            for lsts in lst:
-                itm = lsts.strip()
-                pins = itm.split('->')[0].strip()
-                level = itm.split('->')[1].strip()
-                if level == '0':
-                    cmd.lst0 = str_to_int_list(pins)
-                elif level == '1':
-                    cmd.lst1 = str_to_int_list(pins)
+                index = 0
+                list1 = ''
+                list0 = ''
+                for inp in self.inputs:
+                    if from_val[index] == '1':
+                        list1 = list1 + str(inp) + ','
+                    elif from_val[index] == '0':
+                        list0 = list0 + str(inp) + ','
+                    else:
+                        print 'ERROR: wrong level', from_val[index]
+                        sys.exit(-1)
+                    index += 1
+                cmd.lst0 = str_to_int_list(list0)
+                cmd.lst1 = str_to_int_list(list1)
+
+                index = 0
+                list1 = ''
+                list0 = ''
+                for out in self.outputs:
+                    if to_val[index] == '1':
+                        list1 = list1 + str(out) + ','
+                    elif to_val[index] == '0':
+                        list0 = list0 + str(out) + ','
+                    else:
+                        print 'ERROR: wrong level', to_val[index]
+                        sys.exit(-1)
+                    index += 1
+                cmd.lst0_2 = str_to_int_list(list0)
+                cmd.lst1_2 = str_to_int_list(list1)
+
+            else:
+                if len(sc) == len(self.outputs):
+                    index = 0
+                    list1 = ''
+                    list0 = ''
+                    for out in self.outputs:
+                        if sc[index] == '1':
+                            list1 = list1 + str(out) + ','
+                        elif sc[index] == '0':
+                            list0 = list0 + str(out) + ','
+                        else:
+                            print 'ERROR: wrong level', sc[index]
+                            sys.exit(-1)
+                        index += 1
+                    cmd.lst0 = str_to_int_list(list0)
+                    cmd.lst1 = str_to_int_list(list1)
                 else:
-                    print 'ERROR: invalid level ' + level
+                    print 'ERROR: TEST syntax error'
                     sys.exit(-1)
 
             self.commands.append(cmd)
@@ -224,6 +327,32 @@ class Chip:
 
                 f.write(self.get_pins_val(cmd.lst0) + ' ')
                 f.write(self.get_pins_val(cmd.lst1) + '\n')
+
+            elif cmd.name == 'set+test':
+                if self.pins <= 16:
+                    f.write('\tCMD_SET_16, ')
+                else:
+                    f.write('\tCMD_SET_24, ')
+
+                pins0 = cmd.lst0
+                for power in self.powerMinus:
+                    pins0.append(power)
+                f.write(self.get_pins_val(pins0) + ' ')
+
+                pins1 = cmd.lst1
+                for power in self.powerPlus:
+                    pins1.append(power)
+                for pullUp in self.pullUpOutputs:
+                    pins1.append(pullUp)
+                f.write(self.get_pins_val(pins1) + '\n')
+
+                if self.pins <= 16:
+                    f.write('\tCMD_TEST_16, ')
+                else:
+                    f.write('\tCMD_TEST_24, ')
+
+                f.write(self.get_pins_val(cmd.lst0_2) + ' ')
+                f.write(self.get_pins_val(cmd.lst1_2) + '\n')
 
         f.write('\tCMD_END,\n\n')
 
