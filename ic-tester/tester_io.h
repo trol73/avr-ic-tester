@@ -57,4 +57,7 @@ bool IsFullMode();
 /************************************************************************/
 void TesterDebugStatus(uint8_t pins);
 
+
+void TesterSetPin(uint8_t pin, bool level);
+
 #endif // TESTER_IO_H_

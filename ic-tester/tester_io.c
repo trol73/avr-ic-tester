@@ -176,6 +176,62 @@ bool IsFullMode() {
 	return testerFullMode;
 }
 
+void TesterSetPin(uint8_t pin, bool level) {
+	//  1  2  3  4  5  6  7  8  9 10 11 12 13 14   15 16 17 18 19 20 21 22 23 24 25 26 27 28
+	// D6 D5 D4 D3 D2 A7 A6 A5 A4 A0 A1 A2 A3 --   D0 D1 B3 B4 B6 C7 C6 C5 C4 C3 C2 C1 C0 D7
+	if (pin <= 5) {
+		if (level) {
+			PORTD |= _BV(7 - pin);
+		} else {
+			PORTD &= ~_BV(7 - pin);
+		}
+	} else if (pin <= 9) {
+		if (level) {
+			PORTA |= _BV(13 - pin);
+		} else {
+			PORTA &= ~_BV(13 - pin);
+		}
+	} else if (pin <= 13) {
+		if (level) {
+			PORTA |= _BV(pin - 10);
+		} else {
+			PORTA &= ~_BV(pin - 10);
+		}
+	} else if (pin == 14) {
+		// этот пин на земле, ничего не делаем
+	} else if (pin <= 16) {
+		if (level) {
+			PORTD |= _BV(pin - 16);
+		} else {
+			PORTD &= ~_BV(pin - 16);
+		}
+	} else if (pin <= 18) {
+		if (level) {
+			PORTB |= _BV(pin - 14);
+		} else {
+			PORTB &= ~_BV(pin - 14);
+		}
+	} else if (pin == 19) {
+		if (level) {
+			PORTB |= _BV(6);
+		} else {
+			PORTB &= ~_BV(6);
+		}
+	} else if (pin <= 27) {
+		if (level) {
+			PORTC |= _BV(27 - pin);
+		} else {
+			PORTC &= ~_BV(27 - pin);
+		}		
+	} else if (pin == 28) {
+		if (level) {
+			PORTD |= _BV(7);
+		} else {
+			PORTD &= ~_BV(7);
+		}		
+	}
+}
+
 
 void TesterDebugStatus(uint8_t pins) {
 	// D6 D5 D4 D3 D2 A7 A6 A5    C6 C5 C4 C3 C2 C1 C0 D7
@@ -220,7 +276,7 @@ void TesterDebugStatus(uint8_t pins) {
 	if (pins == 16) {
 		uart_putdw_dec(8); uart_putc(':'); uart_putc(' '); uart_putc(DDRA & _BV(5) ? '1' : '0'); uart_putc(PORTA & _BV(5) ? '1' : '0'); uart_putc(PINA & _BV(5) ? '1' : '0');
 		uart_putc(' '); uart_putc(' '); uart_putc(' '); uart_putc(' ');
-		uart_putdw_dec(9); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(6) ? '1' : '0'); uart_putc(PORTC & _BV(6) ? '1' : '0'); uart_putc(PINC & _BV(6) ? '1' : '0');
+		uart_putc(' '); uart_putdw_dec(9); uart_putc(':'); uart_putc(' '); uart_putc(DDRC & _BV(6) ? '1' : '0'); uart_putc(PORTC & _BV(6) ? '1' : '0'); uart_putc(PINC & _BV(6) ? '1' : '0');
 		uart_putc('\n');	
 	}
 }

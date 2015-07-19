@@ -49,6 +49,33 @@ def dip14_to_dip16(pin):
     sys.exit(-1)
 
 
+def dip8_to_dip28(pin):
+    if pin <= 4:
+        return pin
+    if pin <= 8:
+        return pin + 20
+    print 'ERROR: invalid pin number', pin, 'for DIP-8'
+    sys.exit(-1)
+
+
+def dip14_to_dip28(pin):
+    if pin <= 7:
+        return pin
+    if pin <= 14:
+        return pin + 14
+    print 'ERROR: invalid pin number', pin, 'for DIP-14'
+    sys.exit(-1)
+
+
+def dip16_to_dip28(pin):
+    if pin <= 8:
+        return pin
+    if pin <= 16:
+        return pin + 12
+    print 'ERROR: invalid pin number', pin, 'for DIP-16'
+    sys.exit(-1)
+
+
 def dip20_to_dip28(pin):
     if pin <= 10:
         return pin
@@ -73,6 +100,7 @@ class Command:
     lst1 = []
     lst0_2 = []
     lst1_2 = []
+    pin = None
 
     def __init__(self, name):
         self.name = name
@@ -80,6 +108,7 @@ class Command:
         self.lst1 = []
         self.lst0_2 = []
         self.lst1_2 = []
+        pin = None
 
     def show(self):
         if len(self.lst0_2) + len(self.lst1_2) > 0:
@@ -273,8 +302,28 @@ class Chip:
                     sys.exit(-1)
 
             self.commands.append(cmd)
+        elif line.startswith('PULSE:'):
+            sc = line[len('PULSE:'):].strip()
+            cmd = None
+            if sc[0] == '+':
+                cmd = Command('pulse+')
+            elif sc[0] == '-':
+                cmd = Command('pulse-')
+            else:
+                print 'ERROR: wrong argument - ', sc
+
+            cmd.pin = int(sc[1:].strip())
+
+            self.commands.append(cmd)
+        else:
+            print 'ERROR: wrong command', line
+            sys.exit(-1)
 
     def compile(self, f):
+        """
+
+        :param f:
+        """
         f.write('\t')
         for ch in self.name:
             if ch != ' ':
@@ -354,6 +403,14 @@ class Chip:
                 f.write(self.get_pins_val(cmd.lst0_2) + ' ')
                 f.write(self.get_pins_val(cmd.lst1_2) + '\n')
 
+            elif cmd.name == 'pulse+':
+                f.write('\tCMD_PULSE_PLUS, ')
+                f.write(str(self.get_dip28_num(cmd.pin)) + ',\n')
+
+            elif cmd.name == 'pulse-':
+                f.write('\tCMD_PULSE_MINUS, ')
+                f.write(str(self.get_dip28_num(cmd.pin)) + ',\n')
+
         f.write('\tCMD_END,\n\n')
 
     # формирует битовую маску для DIP-16 и менее
@@ -374,7 +431,7 @@ class Chip:
             result += '_(' + str(p) + ')'
         return result
 
-    # формирует битовую маску для DIP-16 и менее
+    # формирует битовую маску для DIP-20 и далее
     def get_pins_mask_24(self, pins):
         result = ''
         for pin in pins:
@@ -385,12 +442,28 @@ class Chip:
             elif self.pins == 28:
                 p = pin
             else:
-                print 'ERROR: unsupported package', self.pins
+                print 'ERROR: unsupported package DIP-', self.pins
                 sys.exit(-1)
             if len(result) > 0:
                 result += '|'
             result += '_(' + str(p) + ')'
         return result
+
+    # преобразует номер пина МС в номер для DIP-28
+    def get_dip28_num(self, pin):
+        if self.pins == 8:
+            return dip8_to_dip28(pin)
+        elif self.pins == 14:
+            return dip14_to_dip28(pin)
+        elif self.pins == 16:
+            return dip16_to_dip28(pin)
+        elif self.pins == 20:
+            return dip20_to_dip28(pin)
+        elif self.pins == 28:
+            return pin
+        else:
+            print 'ERROR: unsupported package DIP-', self.pins
+            sys.exit(-1)
 
     # формирует строку маски
     def get_pins_val(self, pins):
@@ -461,32 +534,4 @@ for chip in chips:
 f.write('\tCMD_END\n')
 f.write('};\n')
 f.close()
-
-
-
-# CMD_RESET,
-# CMD_INIT_14,	val16(_(1)|_(2)|_(4)|_(5)|_(7)|_(9)|_(10)|_(12)|_(13)|_(14)),
-# CMD_SET_14,		val16(_(7)),   val16(_(14)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)),
-# CMD_TEST_14,	val16(_(3)|_(6)|_(8)|_(11)),   val16(0),
-# CMD_SET_14,		val16(_(7)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)),   val16(_(14)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
-#
-# CMD_SET_14,		val16(_(7)|_(2)|_(5)|_(10)|_(13)),   val16(_(14)|_(1)|_(4)|_(9)|_(12)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
-# CMD_SET_14,		val16(_(7)|_(1)|_(4)|_(9)|_(12)),   val16(_(14)|_(2)|_(5)|_(10)|_(13)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
-# CMD_END,
-#
-# // 155 ЛА 11, 155 ЛА 13
-# 'L', 'A', '1', '1', ',', 'L', 'A', '1', '3', 0,
-# CMD_RESET,
-# CMD_INIT_14,	val16(_(1)|_(2)|_(4)|_(5)|_(7)|_(9)|_(10)|_(12)|_(13)|_(14)),
-# CMD_SET_14,		val16(_(7)),   val16(_(14)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)|_(3)|_(6)|_(8)|_(11)),
-# CMD_TEST_14,	val16(_(3)|_(6)|_(8)|_(11)),   val16(0),
-# CMD_SET_14,		val16(_(7)|_(1)|_(2)|_(4)|_(5)|_(9)|_(10)|_(12)|_(13)),   val16(_(14)|_(3)|_(6)|_(8)|_(11)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
-# CMD_SET_14,		val16(_(7)|_(2)|_(5)|_(10)|_(13)),   val16(_(14)|_(1)|_(4)|_(9)|_(12)|_(3)|_(6)|_(8)|_(11)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
-# CMD_SET_14,		val16(_(7)|_(1)|_(4)|_(9)|_(12)),   val16(_(14)|_(2)|_(5)|_(10)|_(13)|_(3)|_(6)|_(8)|_(11)),
-# CMD_TEST_14,	val16(0),   val16(_(3)|_(6)|_(8)|_(11)),
 

@@ -12,6 +12,7 @@
 
 #include "data.h"
 
+#include <util/delay.h>
 
 char chipName[32];
 
@@ -117,6 +118,26 @@ bool TestData(uint8_t **ptr) {
 						}
 					}
 				}
+				break;
+				
+			case CMD_PULSE_PLUS:	// pin[1] подает положительный импульс (0 -> 1) на вывод
+				{
+					uint8_t pin = pgm_read_byte(*ptr);
+					(*ptr)++;
+					TesterSetPin(pin, 0);
+					_delay_us(1);
+					TesterSetPin(pin, 1);
+				}
+				break;
+				
+			case CMD_PULSE_MINUS:	// pin[1] подает отрицательный импульс (1 -> 0) на вывод
+				{
+					uint8_t pin = pgm_read_byte(*ptr);
+					(*ptr)++;
+					TesterSetPin(pin, 1);
+					_delay_us(1);
+					TesterSetPin(pin, 0);
+				}			
 				break;
 				
 			case CMD_END:				// признак окончания теста
