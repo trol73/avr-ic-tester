@@ -337,7 +337,7 @@ class Chip:
         if self.pins <= 16:
             f.write('\tCMD_INIT_16, ')
         else:
-            f.write('\tCMD_INIT_24, ')
+            f.write('\tCMD_INIT_28, ')
         inputs = self.inputs
         for power in self.powerPlus:
             inputs.append(power)
@@ -354,7 +354,7 @@ class Chip:
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
                 else:
-                    f.write('\tCMD_SET_24, ')
+                    f.write('\tCMD_SET_28, ')
 
                 pins0 = cmd.lst0
                 for power in self.powerMinus:
@@ -372,7 +372,7 @@ class Chip:
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
                 else:
-                    f.write('\tCMD_TEST_24, ')
+                    f.write('\tCMD_TEST_28, ')
 
                 f.write(self.get_pins_val(cmd.lst0) + ' ')
                 f.write(self.get_pins_val(cmd.lst1) + '\n')
@@ -381,7 +381,7 @@ class Chip:
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
                 else:
-                    f.write('\tCMD_SET_24, ')
+                    f.write('\tCMD_SET_28, ')
 
                 pins0 = cmd.lst0
                 for power in self.powerMinus:
@@ -398,7 +398,7 @@ class Chip:
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
                 else:
-                    f.write('\tCMD_TEST_24, ')
+                    f.write('\tCMD_TEST_28, ')
 
                 f.write(self.get_pins_val(cmd.lst0_2) + ' ')
                 f.write(self.get_pins_val(cmd.lst1_2) + '\n')
@@ -432,7 +432,7 @@ class Chip:
         return result
 
     # формирует битовую маску для DIP-20 и далее
-    def get_pins_mask_24(self, pins):
+    def get_pins_mask_28(self, pins):
         result = ''
         for pin in pins:
             if self.pins == 20:
@@ -448,6 +448,22 @@ class Chip:
                 result += '|'
             result += '_(' + str(p) + ')'
         return result
+
+    def get_pins_value_28(self, pins):
+        result = 0
+        for pin in pins:
+            if self.pins == 20:
+                p = dip20_to_dip28(pin)
+            elif self.pins == 24:
+                p = dip24_to_dip28(pin)
+            elif self.pins == 28:
+                p = pin
+            else:
+                print 'ERROR: unsupported package DIP-', self.pins
+                sys.exit(-1)
+            result |= 1 << (pin-1)
+        return result
+
 
     # преобразует номер пина МС в номер для DIP-28
     def get_dip28_num(self, pin):
@@ -469,18 +485,13 @@ class Chip:
     def get_pins_val(self, pins):
         if self.pins <= 16:
             pins = self.get_pins_mask_16(pins)
-        else:
-            pins = self.get_pins_mask_24(pins)
-        if self.pins <= 16:
             if len(pins) > 0:
                 return 'val16(' + pins + '),'
             else:
                 return 'val16(0),'
         else:
-            if len(pins) > 0:
-                return 'val24(' + pins + '),'
-            else:
-                return 'val24(0),'
+            pins = self.get_pins_value_28(pins)
+            return bin((pins >> 16) & 0xff) + ',' + bin((pins >> 8) & 0xff) + ',' + bin(pins & 0xff) + ','
 
     def show(self):
         print 'Name:', self.name
