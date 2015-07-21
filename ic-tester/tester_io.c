@@ -47,6 +47,22 @@ typedef struct {
 } regs_t;
 
 
+// Коды операций для работы с регистрами. Используются методами valXXtoRegs()
+#define OPERATION_COPY		0
+#define OPERATION_SET		1
+#define OPERATION_CLEAR		2
+
+static void setPin28(regs_t *regs, uint8_t pin, bool val);
+static bool getPin28(regs_t *regs, uint8_t pin);
+static void val16toRegs(val16_t *val, regs_t *regs, uint8_t operation);
+static void val24toRegs(val24_t *val, regs_t *regs, uint8_t operation);
+static void val28toRegs(val28_t *val, regs_t *regs, uint8_t operation);
+
+#define read_registers_16(reg)	regs.a = reg##A; regs.c == reg##C; regs.d = reg##D;
+#define read_registers(reg)		regs.a = reg##A; regs.b = reg##B; regs.c == reg##C; regs.d = reg##D;
+#define write_registers_16(reg)	reg##D = regs.d; reg##C = regs.c; reg##A = regs.a;
+#define write_registers(reg)		reg##D = regs.d; reg##C = regs.c; reg##A = regs.a; reg##B = regs.b;
+
 void TesterReset(bool fullMode) {
 	DDRA = 0;
 	DDRB &= ~(_BV(3) | _BV(4) | _BV(6));
@@ -62,158 +78,59 @@ void TesterReset(bool fullMode) {
 }
 
 
-#define map_bit(maskBit, dest, destBit)		if (mask & _BV(maskBit)) dest |= _BV(destBit); else dest &= ~_BV(destBit)
-#define map_bit_(maskBit, dest, destBit)		if (mask & (1L << (maskBit))) dest |= _BV(destBit); else dest &= ~_BV(destBit)
+void TesterConfig16(val16_t *mask) {
+	regs_t regs;
 
+	read_registers_16(DDR);
+	val16toRegs(mask, &regs, OPERATION_COPY);
+	write_registers_16(DDR);
+}
 
-void TesterConfig16(uint16_t mask) {
-	//MSG_HEX("configure ", mask, 2);
-	// D6 D5 D4 D3 D2 A7 A6 A5   C6 C5 C4 C3 C2 C1 C0 D7
-	uint8_t d = DDRD;
-	uint8_t a = DDRA;
-	uint8_t c = DDRC;
+void TesterConfig24(val24_t *mask) {
+	regs_t regs;
 	
-	map_bit(0, d, 6);
-	map_bit(1, d, 5);
-	map_bit(2, d, 4);
-	map_bit(3, d, 3);
-	map_bit(4, d, 2);
-	map_bit(5, a, 7);
-	map_bit(6, a, 6);
-	map_bit(7, a, 5);
-	map_bit(8, c, 6);
-	map_bit(9, c, 5);
-	map_bit(10, c, 4);
-	map_bit(11, c, 3);
-	map_bit(12, c, 2);
-	map_bit(13, c, 1);
-	map_bit(14, c, 0);
-	map_bit(15, d, 7);
-
-	DDRD = d;
-	DDRC = c;
-	DDRA = a;
+	read_registers(DDR);
+	val24toRegs(mask, &regs, OPERATION_COPY);
+	write_registers(DDR);
 }
 
 
-void TesterConfig28(uint32_t mask) {
-	// D6 D5 D4 D3 D2 A7 A6 A5 A4 A0 A1 A2 A3 --   D0 D1 B3 B4 B6 C7 C6 C5 C4 C3 C2 C1 C0 D7
-	uint8_t d = DDRD;
-	uint8_t a = DDRA;
-	uint8_t c = DDRC;
-	uint8_t b = DDRB;
+void TesterConfig28(val28_t *mask) {
+	regs_t regs;
 	
-	map_bit(0, d, 6);
-	map_bit(1, d, 5);
-	map_bit(2, d, 4);
-	map_bit(3, d, 3);
-	map_bit(4, d, 2);
-	map_bit(5, a, 7);
-	map_bit(6, a, 6);
-	map_bit(7, a, 5);
-	map_bit(8, a, 4);
-	map_bit(9, a, 0);
-	map_bit(10, a, 1);
-	map_bit(11, a, 2);
-	map_bit(12, a, 3);
-	
-	map_bit(14, d, 0);
-	map_bit(15, d, 1);
-	map_bit_(16, b, 3);
-	map_bit_(17, b, 4);
-	map_bit_(18, b, 6);
-	map_bit_(19, c, 7);
-	map_bit_(20, c, 6);
-	map_bit_(21, c, 5);
-	map_bit_(22, c, 4);
-	map_bit_(23, c, 3);
-	map_bit_(24, c, 2);
-	map_bit_(25, c, 1);
-	map_bit_(26, c, 0);
-	map_bit_(27, d, 7);
-
-	DDRD = d;
-	DDRC = c;
-	DDRA = a;	
-	DDRB = b;
-}
-
-#define map_set(maskBit, dest, destBit)		if (mask0 & _BV(maskBit)) dest &= ~_BV(destBit); else if (mask1 & _BV(maskBit)) dest |= _BV(destBit);
-#define map_set_(maskBit, dest, destBit)		if (mask0 & (1L << (maskBit))) dest &= ~_BV(destBit); else if (mask1 & (1L << (maskBit))) dest |= _BV(destBit);
-
-
-
-void TesterSet16(uint16_t mask0, uint16_t mask1) {
-	// D6 D5 D4 D3 D2 A7 A6 A5   C6 C5 C4 C3 C2 C1 C0 D7
-	
-	uint8_t d = PORTD;
-	uint8_t c = PORTC;
-	uint8_t a = PORTA;
-	
-	map_set(0, d, 6);
-	map_set(1, d, 5);
-	map_set(2, d, 4);
-	map_set(3, d, 3);
-	map_set(4, d, 2);
-	map_set(5, a, 7);
-	map_set(6, a, 6);
-	map_set(7, a, 5);
-	map_set(8, c, 6);	
-	map_set(9, c, 5);
-	map_set(10, c, 4);
-	map_set(11, c, 3);
-	map_set(12, c, 2);
-	map_set(13, c, 1);
-	map_set(14, c, 0);
-	map_set(15, d, 7);
-	
-	PORTD = d;
-	PORTC = c;
-	PORTA = a;
+	read_registers(DDR);
+	val28toRegs(mask, &regs, OPERATION_COPY);
+	write_registers(DDR);
 }
 
 
-void TesterSet28(uint32_t mask0, uint32_t mask1) {
-	// D6 D5 D4 D3 D2 A7 A6 A5 A4 A0 A1 A2 A3 --   D0 D1 B3 B4 B6 C7 C6 C5 C4 C3 C2 C1 C0 D7
-	uint8_t d = PORTD;
-	uint8_t a = PORTA;
-	uint8_t c = PORTC;
-	uint8_t b = PORTB;
-	
-	map_set(0, d, 6);
-	map_set(1, d, 5);
-	map_set(2, d, 4);
-	map_set(3, d, 3);
-	map_set(4, d, 2);
-	map_set(5, a, 7);
-	map_set(6, a, 6);
-	map_set(7, a, 5);
-	map_set(8, a, 4);
-	map_set(9, a, 0);
-	map_set(10, a, 1);
-	map_set(11, a, 2);
-	map_set(12, a, 3);
-	
-	map_set(14, d, 0);
-	map_set(15, d, 1);
-	map_set_(16, b, 3);
-	map_set_(17, b, 4);
-	map_set_(18, b, 6);
-	map_set_(19, c, 7);
-	map_set_(20, c, 6);
-	map_set_(21, c, 5);
-	map_set_(22, c, 4);
-	map_set_(23, c, 3);
-	map_set_(24, c, 2);
-	map_set_(25, c, 1);
-	map_set_(26, c, 0);
-	map_set_(27, d, 7);
-	
-	PORTD = d;
-	PORTC = c;
-	PORTA = a;
-	PORTB = b;
+void TesterSet16(val16_t *mask0, val16_t *mask1) {
+	regs_t regs;
+
+	read_registers_16(PORT);
+	val16toRegs(mask0, &regs, OPERATION_CLEAR);
+	val16toRegs(mask1, &regs, OPERATION_SET);
+	write_registers_16(PORT);
 }
+
+void TesterSet24(val24_t *mask0, val24_t *mask1) {
+	regs_t regs;
+
+	read_registers(PORT);
+	val24toRegs(mask0, &regs, OPERATION_CLEAR);
+	val24toRegs(mask1, &regs, OPERATION_SET);
+	write_registers(PORT);
+}
+
+void TesterSet28(val28_t *mask0, val28_t *mask1) {
+	regs_t regs;
+
+	read_registers(PORT);
+	val28toRegs(mask0, &regs, OPERATION_CLEAR);
+	val28toRegs(mask1, &regs, OPERATION_SET);
+	write_registers(PORT);
+}
+
 
 
 #define map_test(maskBit, pin, pinBit)		if (mask0 & _BV(maskBit)) {	if (pin & _BV(pinBit)) result = false; } else if (mask1 & _BV(maskBit)) { if (!(pin & _BV(pinBit))) result = false;	}
@@ -297,13 +214,132 @@ bool IsFullMode() {
 	return testerFullMode;
 }
 
-static void setPin(regs_t * regs, uint8_t pin) {
-	
+
+#define set_pin(reg_name, num)	if (val) regs->reg_name |= _BV(num); else regs->reg_name &= ~ _BV(num);
+
+static void setPin28(regs_t *regs, uint8_t pin, bool val) {
+	//  1  2  3  4  5  6  7  8  9 10 11 12 13 14   15 16 17 18 19 20 21 22 23 24 25 26 27 28	
+	// D6 D5 D4 D3 D2 A7 A6 A5 A4 A0 A1 A2 A3 --   D0 D1 B3 B4 B6 C7 C6 C5 C4 C3 C2 C1 C0 D7
+
+	if (pin <= 5) {
+		set_pin(d, 7 - pin);
+	} else if (pin <= 9) {
+		set_pin(a, 13 - pin);
+	} else if (pin <= 13) {
+		set_pin(a, pin - 10);
+	} else if (pin == 14) {
+		// этот пин на земле, ничего не делаем
+	} else if (pin <= 16) {
+		set_pin(d, pin - 16);
+	} else if (pin <= 18) {
+		set_pin(b, pin - 14);
+	} else if (pin <= 18) {
+		set_pin(b, pin - 14);
+	} else if (pin == 19) {
+		set_pin(b, 6);
+	} else if (pin <= 27) {
+		set_pin(c, 27 - pin)
+	} else if (pin == 28) {
+		set_pin(d, 7);
+	}
+}
+
+#define get_pin(reg_name, num)	(regs->reg_name & _BV(num))
+
+
+static bool getPin28(regs_t *regs, uint8_t pin) {
+	//  1  2  3  4  5  6  7  8  9 10 11 12 13 14   15 16 17 18 19 20 21 22 23 24 25 26 27 28	
+	// D6 D5 D4 D3 D2 A7 A6 A5 A4 A0 A1 A2 A3 --   D0 D1 B3 B4 B6 C7 C6 C5 C4 C3 C2 C1 C0 D7
+	if (pin <= 5) {
+		return get_pin(d, 7 - pin);
+	} else if (pin <= 9) {
+		return get_pin(a, 13 - pin);
+	} else if (pin <= 13) {
+		return get_pin(a, pin - 10);
+	} else if (pin == 14) {
+		// этот пин на земле
+		return 0;
+	} else if (pin <= 16) {
+		return get_pin(d, pin - 16);
+	} else if (pin <= 18) {
+		return get_pin(b, pin - 14);
+	} else if (pin <= 18) {
+		return get_pin(b, pin - 14);
+	} else if (pin == 19) {
+		return get_pin(b, 6);
+	} else if (pin <= 27) {
+		return get_pin(c, 27 - pin);
+	} else if (pin == 28) {
+		return get_pin(d, 7);
+	}
+	return 0;
+}
+
+bool getPinVal16(val16_t *val, uint8_t pin) {
+	if (pin <= 8) {
+		return (val->b0 & _BV(pin-1));
+	} else {
+		return (val->b1 & _BV(pin-9));
+	}
 }
 
 
-static bool getPin(regs_t *regs, uint8_t pin) {
-	
+bool getPinVal24(val24_t *val, uint8_t pin) {
+	if (pin <= 8) {
+		return (val->b0 & _BV(pin-1));
+	} else if (pin <= 16) {
+		return (val->b1 & _BV(pin-9));
+	} else {
+		return (val->b2 & _BV(pin-17));
+	}
+}
+
+
+bool getPinVal28(val28_t *val, uint8_t pin) {
+	if (pin <= 8) {
+		return val->b0 & _BV(pin-1);
+	} else if (pin <= 16) {
+		return val->b1 & _BV(pin-9);
+	} else if (pin <= 24) {
+		return val->b2 & _BV(pin-17);
+	} else {
+		return val->b3 & _BV(pin-25);
+	}
+}
+
+
+static void val16toRegs(val16_t *val, regs_t *regs, uint8_t operation) {
+	for (uint8_t i = 1; i <= 16) {
+		uint8_t outPin = i <= 8 ? i : i + 12;
+		if (operation == OPERATION_COPY) {
+			setPin(regs, outPin, getPinVal16(val, i));
+		} else if (getPinVal16(val, i)) {
+			setPin(regs, outPin, operation == OPERATION_SET);
+		}
+	}
+}
+
+
+static void val24toRegs(val24_t *val, regs_t *regs, uint8_t operation) {
+	for (uint8_t i = 1; i <= 24) {
+		uint8_t outPin = pin <= 12 ? i : i + 8;
+		if (operation == OPERATION_COPY) {
+			setPin(regs, outPin, getPinVal24(val, i));
+		} else if (getPinVal24(val, i)) {
+			setPin(regs, outPin, operation == OPERATION_SET);
+		}
+	}
+}
+
+
+static void val28toRegs(val28_t *val, regs_t *regs, uint8_t operation) {
+	for (uint8_t i = 1; i <= 28) {
+		if (operation == OPERATION_COPY) {
+			setPin(regs, i, getPinVal28(val, i));
+		} else if (getPinVal28(val, i)) {
+			setPin(regs, outPin, operation == OPERATION_SET);
+		}		
+	}
 }
 
 void TesterSetPin(uint8_t pin, bool level) {
