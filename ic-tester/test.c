@@ -17,14 +17,24 @@
 char chipName[32];
 
 
-
-static uint32_t pgm_read_3bytes(const uint8_t *buffer) {
-	uint32_t b1 = pgm_read_byte(buffer);
-	uint16_t b2 = pgm_read_byte(buffer+1);
-	uint8_t b3 = pgm_read_byte(buffer+2);
-	
-	return (b1 << 16) + (b2 << 8) + b3;
+static void pgm_read_val16(const uint8_t *buffer, val16_t *val) {
+	val->b0 = pgm_read_byte(buffer);
+	val->b1 = pgm_read_byte(buffer+1);
 }
+
+static void pgm_read_val24(const uint8_t *buffer, val24_t *val) {
+	val->b0 = pgm_read_byte(buffer);
+	val->b1 = pgm_read_byte(buffer+1);
+	val->b2 = pgm_read_byte(buffer+2);
+}
+
+static void pgm_read_val28(const uint8_t *buffer, val28_t *val) {
+	val->b0 = pgm_read_byte(buffer);
+	val->b1 = pgm_read_byte(buffer+1);
+	val->b2 = pgm_read_byte(buffer+2);
+	val->b3 = pgm_read_byte(buffer+3);
+}
+
 
 bool TestData(uint8_t **ptr) {
 	uint8_t succesCnt = 0;
@@ -53,48 +63,80 @@ bool TestData(uint8_t **ptr) {
 				break;
 			case CMD_INIT_16:			// (mask[2]) настраивает порты ввода-вывода
 				{
-					uint16_t mask = pgm_read_word(*ptr);
+					val16_t mask;
+					pgm_read_val16(*ptr, &mask);
 					*ptr += 2;
-					TesterConfig16(mask);
+					TesterConfig16(&mask);
 				}
 				break;
-			case CMD_INIT_28:			// (mask[3]) настраивает порты ввода-вывода
+			case CMD_INIT_24:			// (mask[3]) настраивает порты ввода-вывода
 				{
-					uint32_t mask = pgm_read_3bytes(*ptr);
+					val24_t mask;
+					pgm_read_val24(*ptr, &mask);
+					MSG_HEX("init_0 ", mask.b0, 1);
+					MSG_HEX("init_1 ", mask.b1, 1);
+					MSG_HEX("init_2 ", mask.b2, 1);
 					*ptr += 3;
-					TesterConfig28(mask);
+					TesterConfig24(&mask);
+				}
+				break;				
+			case CMD_INIT_28:			// (mask[4]) настраивает порты ввода-вывода
+				{
+					val28_t mask;
+					pgm_read_val28(*ptr, &mask);
+					*ptr += 4;
+					TesterConfig28(&mask);
 				}
 				break;
 			case CMD_SET_16:			// (mask0[2], mask1[2]) выставляет логические 0 и 1 на выводах по маскам
 				{
-					uint16_t mask0 = pgm_read_word(*ptr);
+					val16_t mask0, mask1;
+					pgm_read_val16(*ptr, &mask0);
 					*ptr += 2;
-					uint16_t mask1 = pgm_read_word(*ptr);
+					pgm_read_val16(*ptr, &mask1);
 					*ptr += 2;
+					
 					if (failureCnt == 0) {
-						TesterSet16(mask0, mask1);
+						TesterSet16(&mask0, &mask1);
 					}
 				}			
 				break;
-			case CMD_SET_28:			// (mask0[3], mask1[3]) выставляет логические 0 и 1 на выводах по маскам
+			case CMD_SET_24:			// (mask0[3], mask1[3]) выставляет логические 0 и 1 на выводах по маскам
 				{
-					uint32_t mask0 = pgm_read_3bytes(*ptr);
+					val24_t mask0, mask1;
+					pgm_read_val24(*ptr, &mask0);
 					*ptr += 3;
-					uint32_t mask1 = pgm_read_3bytes(*ptr);
+					pgm_read_val24(*ptr, &mask1);
 					*ptr += 3;
+				
 					if (failureCnt == 0) {
-						TesterSet28(mask0, mask1);
+						TesterSet24(&mask0, &mask1);
+					}
+				}
+				break;
+			case CMD_SET_28:			// (mask0[4], mask1[4]) выставляет логические 0 и 1 на выводах по маскам
+				{
+					val28_t mask0, mask1;
+					pgm_read_val28(*ptr, &mask0);
+					*ptr += 4;
+					pgm_read_val28(*ptr, &mask1);
+					*ptr += 4;
+					
+					if (failureCnt == 0) {
+						TesterSet28(&mask0, &mask1);
 					}
 				}
 				break;
 			case CMD_TEST_16:			// (mask0[2], mask1[2]) проверяет, что на выводах установлен ожидаемый уровень
 				{
-					uint16_t mask0 = pgm_read_word(*ptr);
+					val16_t mask0, mask1;
+					pgm_read_val16(*ptr, &mask0);
 					*ptr += 2;
-					uint16_t mask1 = pgm_read_word(*ptr);
+					pgm_read_val16(*ptr, &mask1);
 					*ptr += 2;
+										
 					if (failureCnt == 0) {
-						if (TesterTest16(mask0, mask1)) {
+						if (TesterTest16(&mask0, &mask1)) {
 	MSG("success");
 							succesCnt++;
 						} else {
@@ -104,16 +146,39 @@ bool TestData(uint8_t **ptr) {
 					}
 				}
 				break;
-			case CMD_TEST_28:			// (mask0[3], mask1[3]) проверяет, что на выводах установлен ожидаемый уровень
+			case CMD_TEST_24:			// (mask0[3], mask1[3]) проверяет, что на выводах установлен ожидаемый уровень
 				{
-					uint32_t mask0 = pgm_read_3bytes(*ptr);
+					val24_t mask0, mask1;
+					pgm_read_val24(*ptr, &mask0);
 					*ptr += 3;
-					uint32_t mask1 = pgm_read_3bytes(*ptr);
+					pgm_read_val24(*ptr, &mask1);
 					*ptr += 3;
+				
 					if (failureCnt == 0) {
-						if (TesterTest28(mask0, mask1)) {
+						if (TesterTest24(&mask0, &mask1)) {
+							MSG("success");
 							succesCnt++;
 						} else {
+							MSG("fail");
+							failureCnt++;
+						}
+					}
+				}
+				break;
+			case CMD_TEST_28:			// (mask0[4], mask1[4]) проверяет, что на выводах установлен ожидаемый уровень
+				{
+					val28_t mask0, mask1;
+					pgm_read_val28(*ptr, &mask0);
+					*ptr += 4;
+					pgm_read_val28(*ptr, &mask1);
+					*ptr += 4;
+					
+					if (failureCnt == 0) {
+						if (TesterTest28(&mask0, &mask1)) {
+							MSG("success");
+							succesCnt++;
+						} else {
+							MSG("fail");
 							failureCnt++;
 						}
 					}

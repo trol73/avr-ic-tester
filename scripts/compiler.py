@@ -94,6 +94,22 @@ def dip24_to_dip28(pin):
     sys.exit(-1)
 
 
+def dip20_to_dip24(pin):
+    if pin <= 10:
+        return pin
+    if pin <= 20:
+        return pin + 4
+    print 'ERROR: invalid pin number', pin, 'for DIP-20'
+    sys.exit(-1)
+
+
+def binary_byte(b):
+    result = bin(b)
+    while len(result) < 10:
+        result = result.replace('0b', '0b0')
+    return result
+
+
 class Command:
     name = None
     lst0 = []
@@ -336,6 +352,8 @@ class Chip:
 
         if self.pins <= 16:
             f.write('\tCMD_INIT_16, ')
+        elif self.pins <= 24:
+            f.write('\tCMD_INIT_24, ')
         else:
             f.write('\tCMD_INIT_28, ')
         inputs = self.inputs
@@ -344,7 +362,7 @@ class Chip:
         for power in self.powerMinus:
             inputs.append(power)
 
-        f.write(self.get_pins_val(inputs) + '\n')
+        f.write(self.get_pins_val(inputs) + '\t// ' + self.get_pins_comment(inputs) + '\n')
 
         f.write('\n')
 
@@ -353,6 +371,8 @@ class Chip:
             if cmd.name == 'set':
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
+                elif self.pins <= 24:
+                    f.write('\tCMD_SET_24, ')
                 else:
                     f.write('\tCMD_SET_28, ')
 
@@ -371,6 +391,8 @@ class Chip:
             elif cmd.name == 'test':
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
+                elif self.pins <= 24:
+                    f.write('\tCMD_TEST_24, ')
                 else:
                     f.write('\tCMD_TEST_28, ')
 
@@ -380,6 +402,8 @@ class Chip:
             elif cmd.name == 'set+test':
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
+                elif self.pins <= 24:
+                    f.write('\tCMD_SET_24, ')
                 else:
                     f.write('\tCMD_SET_28, ')
 
@@ -397,6 +421,8 @@ class Chip:
 
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
+                elif self.pins <= 24:
+                    f.write('\tCMD_TEST_24, ')
                 else:
                     f.write('\tCMD_TEST_28, ')
 
@@ -413,57 +439,43 @@ class Chip:
 
         f.write('\tCMD_END,\n\n')
 
-    # формирует битовую маску для DIP-16 и менее
-    def get_pins_mask_16(self, pins):
-        result = ''
+    # формирует битовую маску
+    def get_pins_mask(self, pins):
+        result = 0
         for pin in pins:
-            if self.pins == 14:
-                p = dip14_to_dip16(pin)
-            elif self.pins == 8:
+            if self.pins == 8:
                 p = dip8_to_dip16(pin)
+            elif self.pins == 14:
+                p = dip14_to_dip16(pin)
             elif self.pins == 16:
+                p = pin
+            elif self.pins == 20:
+                p = dip20_to_dip24(pin)
+            elif self.pins == 24:
+                p = pin
+            elif self.pins == 28:
                 p = pin
             else:
                 print 'ERROR: unsupported package', self.pins
                 sys.exit(-1)
-            if len(result) > 0:
-                result += '|'
-            result += '_(' + str(p) + ')'
+            result |= 1 << (p-1)
         return result
 
-    # формирует битовую маску для DIP-20 и далее
-    def get_pins_mask_28(self, pins):
-        result = ''
-        for pin in pins:
-            if self.pins == 20:
-                p = dip20_to_dip28(pin)
-            elif self.pins == 24:
-                p = dip24_to_dip28(pin)
-            elif self.pins == 28:
-                p = pin
-            else:
-                print 'ERROR: unsupported package DIP-', self.pins
-                sys.exit(-1)
-            if len(result) > 0:
-                result += '|'
-            result += '_(' + str(p) + ')'
-        return result
-
-    def get_pins_value_28(self, pins):
-        result = 0
-        for pin in pins:
-            if self.pins == 20:
-                p = dip20_to_dip28(pin)
-            elif self.pins == 24:
-                p = dip24_to_dip28(pin)
-            elif self.pins == 28:
-                p = pin
-            else:
-                print 'ERROR: unsupported package DIP-', self.pins
-                sys.exit(-1)
-            result |= 1 << (pin-1)
-        return result
-
+    #
+    # def get_pins_value_28(self, pins):
+    #     result = 0
+    #     for pin in pins:
+    #         if self.pins == 20:
+    #             p = dip20_to_dip28(pin)
+    #         elif self.pins == 24:
+    #             p = dip24_to_dip28(pin)
+    #         elif self.pins == 28:
+    #             p = pin
+    #         else:
+    #             print 'ERROR: unsupported package DIP-', self.pins
+    #             sys.exit(-1)
+    #         result |= 1 << (pin-1)
+    #     return result
 
     # преобразует номер пина МС в номер для DIP-28
     def get_dip28_num(self, pin):
@@ -483,15 +495,21 @@ class Chip:
 
     # формирует строку маски
     def get_pins_val(self, pins):
-        if self.pins <= 16:
-            pins = self.get_pins_mask_16(pins)
-            if len(pins) > 0:
-                return 'val16(' + pins + '),'
-            else:
-                return 'val16(0),'
-        else:
-            pins = self.get_pins_value_28(pins)
-            return bin((pins >> 16) & 0xff) + ',' + bin((pins >> 8) & 0xff) + ',' + bin(pins & 0xff) + ','
+        v = self.get_pins_mask(pins)
+        result = binary_byte(v & 0xff) + ', ' + binary_byte((v >> 8) & 0xff) + ', '
+        if self.pins > 16:
+            result += binary_byte((v >> 16) & 0xff) + ', '
+        if self.pins > 24:
+            result += binary_byte((v >> 24) & 0xff) + ', '
+        return result
+
+    def get_pins_comment(self, pins):
+        v = self.get_pins_mask(pins)
+        result = ''
+        for i in range(0, 30):
+            if (v & (1 << i)) != 0:
+                result += str(i+1) + ' '
+        return result + '     ' + str(pins)
 
     def show(self):
         print 'Name:', self.name
@@ -532,9 +550,6 @@ for s in f:
 f.close()
 
 f = open(out, 'w')
-f.write('#define val16(v)	((v) & 0xff), ((v) >> 8)\n')
-f.write('\n')
-f.write('#define _(v)		(1 << (v-1))\n')
 f.write('\n')
 f.write('const uint8_t LOGIC_DATA[] PROGMEM = {\n')
 
