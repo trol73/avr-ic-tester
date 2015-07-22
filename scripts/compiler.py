@@ -386,7 +386,7 @@ class Chip:
                     pins1.append(power)
                 for pullUp in self.pullUpOutputs:
                     pins1.append(pullUp)
-                f.write(self.get_pins_val(pins1) + '\n')
+                f.write(self.get_pins_val(pins1) + '\t// ' + self.get_pins_comment(pins0) + '\t' + self.get_pins_comment(pins1) + '\n')
 
             elif cmd.name == 'test':
                 if self.pins <= 16:
