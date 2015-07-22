@@ -17,21 +17,21 @@ bool testerFullMode = false;
 
 
 /************************************************************************************************************************************************
-              28                                     20                                    16                                    14
-        _______  _______                      _______  _______                      _______  _______                      _______  _______
-  D6  --| 1    \/   28 |-- D7           D6  --| 1    \/   20 |-- D7           D6  --| 1    \/   16 |-- D7           D6  --| 1    \/   14 |-- D7
-  D5  --| 2         27 |-- C0           D5  --| 2         19 |-- C0           D5  --| 2         15 |-- C0           D5  --| 2         13 |-- C0
-  D4  --| 3         26 |-- C1           D4  --| 3         18 |-- C1           D4  --| 3         14 |-- C1           D4  --| 3         12 |-- C1
-  D3  --| 4         25 |-- C2           D3  --| 4         17 |-- C2           D3  --| 4         13 |-- C2           D3  --| 4         11 |-- C2
-  D2  --| 5         24 |-- C3           D2  --| 5         16 |-- C3           D2  --| 5         12 |-- C3           D2  --| 5         10 |-- C3
-  A7  --| 6         23 |-- C4           A7  --| 6         15 |-- C4           A7  --| 6         11 |-- C4           A7  --| 6          9 |-- C4
-  A6  --| 7         22 |-- C5           A6  --| 7         14 |-- C5           A6  --| 7         10 |-- C5           A6  --| 7          8 |-- C5
-  A5  --| 8         21 |-- C6           A5  --| 8         13 |-- C6           A5  --| 8          9 |-- C6                 ----------------
-  A4  --| 9         20 |-- C7           A4  --| 9         12 |-- C7                 ----------------
-  A0  --| 10        19 |-- B6           A0  --| 10        11 |-- B6
-  A1  --| 11        18 |-- B4                 ----------------
-  A2  --| 12*       17 |-- B3
-  A3  --| 13*      *16 |-- D1
+              28                                 24                                20                                16                               14
+        _______  _______                  _______  _______                  _______  _______                  _______  _______                  _______  _______
+  D6  --| 1    \/   28 |-- D7       D6  --| 1    \/   24 |-- D7       D6  --| 1    \/   20 |-- D7       D6  --| 1    \/   16 |-- D7       D6  --| 1    \/   14 |-- D7
+  D5  --| 2         27 |-- C0       D5  --| 2         23 |-- C0       D5  --| 2         19 |-- C0       D5  --| 2         15 |-- C0       D5  --| 2         13 |-- C0
+  D4  --| 3         26 |-- C1       D4  --| 3         22 |-- C1       D4  --| 3         18 |-- C1       D4  --| 3         14 |-- C1       D4  --| 3         12 |-- C1
+  D3  --| 4         25 |-- C2       D3  --| 4         21 |-- C2       D3  --| 4         17 |-- C2       D3  --| 4         13 |-- C2       D3  --| 4         11 |-- C2
+  D2  --| 5         24 |-- C3       D2  --| 5         20 |-- C3       D2  --| 5         16 |-- C3       D2  --| 5         12 |-- C3       D2  --| 5         10 |-- C3
+  A7  --| 6         23 |-- C4       A7  --| 6         19 |-- C4       A7  --| 6         15 |-- C4       A7  --| 6         11 |-- C4       A7  --| 6          9 |-- C4
+  A6  --| 7         22 |-- C5       A6  --| 7         18 |-- C5       A6  --| 7         14 |-- C5       A6  --| 7         10 |-- C5       A6  --| 7          8 |-- C5
+  A5  --| 8         21 |-- C6       A5  --| 8         17 |-- C6       A5  --| 8         13 |-- C6       A5  --| 8          9 |-- C6             ----------------
+  A4  --| 9         20 |-- C7       A4  --| 9         16 |-- C7       A4  --| 9         12 |-- C7             ----------------
+  A0  --| 10        19 |-- B6       A0  --| 10        15 |-- B6       A0  --| 10        11 |-- B6
+  A1  --| 11        18 |-- B4       A0  --| 11        14 |-- B4             ----------------
+  A2  --| 12*       17 |-- B3       A0  --| 12        13 |-- B3
+  A3  --| 13*      *16 |-- D1             ----------------
    |----| 14       *15 |-- D0
         ----------------  
 		
@@ -100,10 +100,6 @@ void TesterConfig24(val24_t *mask) {
 	
 	read_registers(DDR);
 	val24toRegs(mask, &regs, OPERATION_COPY);
-MSG_HEX("config_a ", regs.a, 1);
-MSG_HEX("config_b ", regs.b, 1);
-MSG_HEX("config_c ", regs.c, 1);
-MSG_HEX("config_d ", regs.d, 1);
 	write_registers(DDR);
 }
 
@@ -113,10 +109,6 @@ void TesterConfig28(val28_t *mask) {
 	
 	read_registers(DDR);
 	val28toRegs(mask, &regs, OPERATION_COPY);
-MSG_HEX("config_a ", regs.a, 1);
-MSG_HEX("config_b ", regs.b, 1);
-MSG_HEX("config_c ", regs.c, 1);
-MSG_HEX("config_d ", regs.d, 1);
 	write_registers(DDR);
 }
 
@@ -150,10 +142,6 @@ void TesterSet28(val28_t *mask0, val28_t *mask1) {
 
 
 
-//#define map_test(maskBit, pin, pinBit)		if (mask0 & _BV(maskBit)) {	if (pin & _BV(pinBit)) result = false; } else if (mask1 & _BV(maskBit)) { if (!(pin & _BV(pinBit))) result = false;	}
-//#define map_test_(maskBit, pin, pinBit)		if (mask0 & (1L << (maskBit))) {	if (pin & _BV(pinBit)) result = false; } else if (mask1 & (1L << (maskBit))) { if (!(pin & _BV(pinBit))) result = false;	}	
-
-
 
 bool TesterTest16(val16_t *mask0, val16_t *mask1) {
 	regs_t regs;
@@ -165,6 +153,7 @@ bool TesterTest16(val16_t *mask0, val16_t *mask1) {
 	for (uint8_t pin = 1; pin <= 16; pin++) {
 		bool pinValue = getPinVal16(&val, pin);
 		if ((pinValue && getPinVal16(mask0, pin)) || (!pinValue && getPinVal16(mask1, pin))) {
+			MSG_DEC("fail ", pin);
 			TesterDebugStatus(16);
 			return false;
 		}
@@ -182,6 +171,14 @@ bool TesterTest24(val24_t *mask0, val24_t *mask1) {
 	for (uint8_t pin = 1; pin <= 24; pin++) {
 		bool pinValue = getPinVal24(&val, pin);
 		if ((pinValue && getPinVal24(mask0, pin)) || (!pinValue && getPinVal24(mask1, pin))) {
+			MSG_DEC("fail on pin ", pin);
+			if (getPinVal24(mask0, pin)) {
+				MSG("expected: 0");
+			}
+			if (getPinVal24(mask1, pin)) {
+				MSG("expected: 1");
+			}
+			MSG_DEC("found: ", pinValue);
 			TesterDebugStatus(24);
 			return false;
 		}
@@ -199,6 +196,7 @@ bool TesterTest28(val28_t *mask0, val28_t *mask1) {
 	for (uint8_t pin = 1; pin <= 28; pin++) {
 		bool pinValue = getPinVal28(&val, pin);
 		if ((pinValue && getPinVal28(mask0, pin)) || (!pinValue && getPinVal28(mask1, pin))) {
+			MSG_DEC("fail ", pin);
 			TesterDebugStatus(28);
 			return false;
 		}
@@ -230,9 +228,7 @@ static void setPin28(regs_t *regs, uint8_t pin, bool val) {
 	} else if (pin == 14) {
 		// этот пин на земле, ничего не делаем
 	} else if (pin <= 16) {
-		set_pin(d, pin - 16);
-	} else if (pin <= 18) {
-		set_pin(b, pin - 14);
+		set_pin(d, pin - 15);
 	} else if (pin <= 18) {
 		set_pin(b, pin - 14);
 	} else if (pin == 19) {
@@ -324,7 +320,7 @@ static void val16toRegs(val16_t *val, regs_t *regs, uint8_t operation) {
 
 static void val24toRegs(val24_t *val, regs_t *regs, uint8_t operation) {
 	for (uint8_t i = 1; i <= 24; i++) {
-		uint8_t outPin = i <= 12 ? i : i + 8;
+		uint8_t outPin = i <= 12 ? i : i + 4;
 		if (operation == OPERATION_COPY) {
 			setPin28(regs, outPin, getPinVal24(val, i));
 		} else if (getPinVal24(val, i)) {
@@ -422,7 +418,7 @@ static void regsToVal16(regs_t *regs, val16_t *val) {
 
 static void regsToVal24(regs_t *regs, val24_t *val) {
 	for (uint8_t i = 1; i <= 24; i++) {
-		uint8_t pin28 = i <= 12 ? i : i + 8;
+		uint8_t pin28 = i <= 12 ? i : i + 4;
 		bool v = getPin28(regs, pin28);
 		setVal24Pin(val, i, v);
 	}
@@ -440,8 +436,6 @@ void TesterSetPin(uint8_t pin, bool level) {
 	val28_t val;
 
 	read_registers(PORT);
-	//regsToVal28(&regs, &val);
-	//setVal28Pin(&val, pin, level);
 	val.b0 = 0;
 	val.b1 = 0;
 	val.b2 = 0;
