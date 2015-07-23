@@ -217,6 +217,7 @@ class Chip:
                         print 'ERROR: invalid level ' + level
                         sys.exit(-1)
             else:
+                sc = sc.replace(':', '')
                 if len(sc) == len(self.inputs):
                     index = 0
                     list1 = ''
@@ -258,8 +259,8 @@ class Chip:
                 cmd.name = 'set+test'
                 # команда вида TEST: xxxx => yyyyyyyy
                 args = sc.split('=>')
-                from_val = args[0].strip()
-                to_val = args[1].strip()
+                from_val = args[0].strip().replace(':', '')
+                to_val = args[1].strip().replace(':', '')
                 if len(from_val) != len(self.inputs):
                     print 'ERROR: TEST syntax error:', from_val
                     sys.exit(-1)
@@ -298,6 +299,7 @@ class Chip:
                 cmd.lst1_2 = str_to_int_list(list1)
 
             else:
+                sc = sc.replace(':', '')
                 if len(sc) == len(self.outputs):
                     index = 0
                     list1 = ''

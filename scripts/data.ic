@@ -489,4 +489,85 @@ CHIP[16] 'ТВ9'
 	
 
 
+CHIP[14] 'ИЕ5'
+	POWER: -10 +5
+	IN: 14, 1, 2, 3
+	OUT: 12, 9, 8, 11
+
+	TEST: 1111 => 0000
+	TEST: 1100 => 0000
+	PULSE: -14
+	TEST: 1000
+
+	PULSE: -14
+	TEST: 0000
+	PULSE: -14
+	TEST: 1000
+	PULSE: -1
+	TEST: 1100
+	PULSE: -1
+	TEST: 1010
+	PULSE: -1
+	TEST: 1110		
+	PULSE: -1
+	TEST: 1001		
+	PULSE: -1
+	TEST: 1101			
+	PULSE: -1
+	TEST: 1011
+	PULSE: -1
+	TEST: 1111
+	PULSE: -1
+	TEST: 1000	
+
+
+CHIP[16] 'ИЕ7'
+	POWER: -8 +16
+	IN: 15, 1, 10, 9, 11, 5, 4, 14
+	OUT: 3, 2, 6, 7, 12, 13
+
+	# сброс
+	SET: 1 -> 14
+	TEST: 3, 2, 6, 7 -> 0
+
+	# асинхронная загрузка 15
+	SET: 1111:0000
+	TEST: 3, 2, 6, 7 -> 1
+	# асинхронная загрузка 0
+	SET: 0000:0110
+	TEST: 3, 2, 6, 7 -> 0
+
+	SET: 1 -> 11
+	# счет от 0 до 16
+	PULSE: +5
+	TEST: 1000:11
+	PULSE: +5
+	TEST: 0100:11	
+	PULSE: +5
+	TEST: 1100:11
+	PULSE: +5
+	TEST: 0010:11	
+	PULSE: +5
+	TEST: 1010:11		
+	PULSE: +5
+	TEST: 0110:11		
+	PULSE: +5	
+	TEST: 1110:11		
+	PULSE: +5
+	TEST: 0001:11		
+	PULSE: +5
+	TEST: 1001:11		
+	PULSE: +5
+	TEST: 0101:11		
+	PULSE: +5
+	TEST: 1101:11		
+	PULSE: +5
+	TEST: 0011:11		
+	PULSE: +5
+	TEST: 1011:11			
+	PULSE: +5
+	TEST: 0111:11			
+	PULSE: +5
+	TEST: 1111:11			
+
 	
