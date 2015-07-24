@@ -28,6 +28,8 @@
 #define CMD_PULSE_PLUS		11	// (pin[1]) подает положительный импульс (0 -> 1) на вывод
 #define CMD_PULSE_MINUS		12	// (pin[1]) подает отрицательный импульс (1 -> 0) на вывод
 
+#define CMD_PRINT_14		200
+
 #define CMD_END				0xff	// признак окончания теста
 
 bool TestLogic();

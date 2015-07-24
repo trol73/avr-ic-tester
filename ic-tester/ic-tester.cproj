@@ -200,6 +200,9 @@
     <Compile Include="lib\glcd\text_tiny.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="memory_test.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="test.c">
       <SubType>compile</SubType>
     </Compile>

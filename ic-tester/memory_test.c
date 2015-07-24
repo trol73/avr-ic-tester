@@ -4,6 +4,13 @@
  * Created: 24.07.2015 19:55:45
  *  Author: Trol
  */ 
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+
+#include <avr/io.h>
 
 /*********************************************************************************************************
 	           __________________
@@ -21,20 +28,22 @@
 	           |-----|     | 5V |-- 8   (A5)
 	(D3)  4  --|~RAS |     |    |
 	(C0) 15  --|~CAS |     | GND|-- 16  (D7)
-	(D4)  3  --|~W/R |     |    |
+	(D4)  3  --|~WE  |     |    |
 	           ------------------
 
 *********************************************************************************************************/
 
-#define set_RAS()
-#define clr_RAS()
-#define set_CAS()
-#define clr_CAS()
-#define set_WR()
-#define clr_WR()
+#define set_RAS()	PORTD |= _BV(3)
+#define clr_RAS()	PORTD &= ~_BV(3)
+#define set_CAS()	PORTC |= _BV(0)
+#define clr_CAS()	PORTC &= ~_BV(0)
+#define set_WE()	PORTD |= _BV(4)
+#define clr_WE()	PORTD &= ~_BV(4)
 
-#define set_DI(val)
-#define get_DO()
+#define set_DI(val)		if (val) PORTD |= _BV(5); else PORTD &= ~_BV(5)
+#define get_DO()		(PINC & _BV(1))
+
+uint16_t rows;    // max rows number. 0x100 - 4164, 0x200 - 41256
 
 
 static void setAddress(uint16_t val) {
@@ -53,7 +62,7 @@ static void setAddress(uint16_t val) {
 	if (val & _BV(2)) {
 		a |= _BV(7);
 	}
-	c |= val & (_BV(3)|_BV(4)|_BV(5))
+	c |= val & (_BV(3)|_BV(4)|_BV(5));
 	if (val & _BV(6)) {
 		c |= _BV(2);
 	}
@@ -69,6 +78,9 @@ static void setAddress(uint16_t val) {
 	PORTD = d;
 }
 
+/************************************************************************/
+/* Чтение бита памяти                                                   */
+/************************************************************************/
 bool MemReadBit(uint16_t row, uint16_t col) {
 	// A8 -> 0
 	set_RAS();
@@ -89,71 +101,41 @@ bool MemReadBit(uint16_t row, uint16_t col) {
 	set_CAS();
 
 	return result;
-/*	
-чтение бита памяти
-
-A9 -> 0
-RAS -> 1
-CAS -> 1
-
-A9 -> row >> 8
-
-address(row)
-
-RAS -> 0
-WE -> 1
-
-A9 -> col >> 8
-address(col)
-
-CAS -> 0
-
-data <- DO
-
-RAS -> 1
-CAS -> 1
-
-
- */
 }
-/*
 
 
-запись бита памяти
+/************************************************************************/
+/* Запись бита памяти                                                   */
+/************************************************************************/
+void MemWriteBit(uint16_t row, uint16_t col, bool val) {
+	set_RAS();
+	set_CAS();
+	
+	setAddress(row);
+	
+	clr_RAS();
+	clr_WE();
+	
+	set_DI(val);
+	
+	setAddress(col);
+	
+	clr_CAS();
+	
+	set_RAS();
+	set_CAS();
+}
 
-RAS -> 1
-CAS -> 1
-
-A9 -> row >> 8
-address(row)
-
-RAS -> 0
-WE -> 0
-
-DI -> val
-
-A9 -> col >> 8
-address(col)
-
-CAS -> 0
-
-RAS -> 1
-CAS -> 1
-
-
-регенерация памяти
-вызывается раз в 4 мс
-uint16_t rows;    // max rows number. 0x100 - 4164, 0x200 - 41256
-
-RAS -> 1
-CAS -> 1
-
-
-for i = 0 .. rows:
-	address(i)
-	A9 -> i >> 8
-	RAS -> 0
-	RAS -> 1
-
-
-*/
+/************************************************************************/
+/* Регенерация памяти, вызывать раз в 4 мс                              */
+/************************************************************************/
+void MemRegenerate() {
+	set_RAS();
+	set_CAS();
+	
+	for (uint16_t row = 0 ; row < rows; row++) {
+		setAddress(row);
+		clr_RAS();
+		set_RAS();
+	}
+}

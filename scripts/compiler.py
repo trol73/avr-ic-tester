@@ -342,22 +342,30 @@ class Chip:
 
         :param f:
         """
+        size = 0
+
         f.write('\t')
         for ch in self.name:
             if ch != ' ':
                 f.write("'")
                 f.write(ch)
                 f.write("', ")
+                size += 1
         f.write("0,\n")
+        size += 1
 
         f.write('\tCMD_RESET,\n')
+        size += 1
 
         if self.pins <= 16:
             f.write('\tCMD_INIT_16, ')
+            size += 3
         elif self.pins <= 24:
             f.write('\tCMD_INIT_24, ')
+            size += 4
         else:
             f.write('\tCMD_INIT_28, ')
+            size += 5
         inputs = self.inputs
         for power in self.powerPlus:
             inputs.append(power)
@@ -373,10 +381,13 @@ class Chip:
             if cmd.name == 'set':
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
+                    size += 5
                 elif self.pins <= 24:
                     f.write('\tCMD_SET_24, ')
+                    size += 6
                 else:
                     f.write('\tCMD_SET_28, ')
+                    size += 7
 
                 pins0 = cmd.lst0
                 for power in self.powerMinus:
@@ -393,10 +404,13 @@ class Chip:
             elif cmd.name == 'test':
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
+                    size += 5
                 elif self.pins <= 24:
                     f.write('\tCMD_TEST_24, ')
+                    size += 6
                 else:
                     f.write('\tCMD_TEST_28, ')
+                    size += 7
 
                 f.write(self.get_pins_val(cmd.lst0) + ' ')
                 f.write(self.get_pins_val(cmd.lst1) + '\n')
@@ -404,10 +418,13 @@ class Chip:
             elif cmd.name == 'set+test':
                 if self.pins <= 16:
                     f.write('\tCMD_SET_16, ')
+                    size += 5
                 elif self.pins <= 24:
                     f.write('\tCMD_SET_24, ')
+                    size += 6
                 else:
                     f.write('\tCMD_SET_28, ')
+                    size += 7
 
                 pins0 = cmd.lst0
                 for power in self.powerMinus:
@@ -423,10 +440,13 @@ class Chip:
 
                 if self.pins <= 16:
                     f.write('\tCMD_TEST_16, ')
+                    size += 5
                 elif self.pins <= 24:
                     f.write('\tCMD_TEST_24, ')
+                    size += 6
                 else:
                     f.write('\tCMD_TEST_28, ')
+                    size += 7
 
                 f.write(self.get_pins_val(cmd.lst0_2) + ' ')
                 f.write(self.get_pins_val(cmd.lst1_2) + '\n')
@@ -434,12 +454,16 @@ class Chip:
             elif cmd.name == 'pulse+':
                 f.write('\tCMD_PULSE_PLUS, ')
                 f.write(str(self.get_dip28_num(cmd.pin)) + ',\n')
+                size += 2
 
             elif cmd.name == 'pulse-':
                 f.write('\tCMD_PULSE_MINUS, ')
                 f.write(str(self.get_dip28_num(cmd.pin)) + ',\n')
+                size += 2
 
         f.write('\tCMD_END,\n\n')
+        size += 1
+        return size
 
     # формирует битовую маску
     def get_pins_mask(self, pins):
@@ -555,11 +579,17 @@ f = open(out, 'w')
 f.write('\n')
 f.write('const uint8_t LOGIC_DATA[] PROGMEM = {\n')
 
+size = 0
 for chip in chips:
     chip.show()
-    chip.compile(f)
+    size += chip.compile(f)
 
 f.write('\tCMD_END\n')
+size += 1
 f.write('};\n')
 f.close()
+
+
+print 'Total chips: ', len(chips)
+print 'Data size: ', size
 
