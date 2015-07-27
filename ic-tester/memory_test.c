@@ -4,13 +4,11 @@
  * Created: 24.07.2015 19:55:45
  *  Author: Trol
  */ 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
 
+#include "memory_test.h"
 
 #include <avr/io.h>
+#include "debug.h"
 
 /*********************************************************************************************************
 	           __________________
@@ -41,10 +39,23 @@
 #define clr_WE()	PORTD &= ~_BV(4)
 
 #define set_DI(val)		if (val) PORTD |= _BV(5); else PORTD &= ~_BV(5)
-#define get_DO()		(PINC & _BV(1))
+#define get_DO()		((PINC & _BV(1)) != 0)
 
 uint16_t rows;    // max rows number. 0x100 - 4164, 0x200 - 41256
 
+uint16_t failures[9];
+uint16_t successes[9];
+
+void MemInit() {
+	DDRC &= ~_BV(1);
+	DDRA |= _BV(5)|_BV(6)|_BV(7);
+	DDRC |= _BV(0)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6);
+	DDRD |= _BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7);
+	
+	PORTD &= _BV(7);
+	PORTA |= _BV(5);
+//	PORTC |= _BV(1);
+}
 
 static void setAddress(uint16_t val) {
 	// D2 A6 A7 C3 C4 C5 C2 C6 (D6)
@@ -137,5 +148,79 @@ void MemRegenerate() {
 		setAddress(row);
 		clr_RAS();
 		set_RAS();
+	}
+}
+
+
+
+void MemTest() {
+	rows = 9;
+	// заполняем все нулями
+	for (uint16_t row = 0; row < rows; row++) {
+		for (uint16_t col = 0; col < rows; col++) {
+			MemWriteBit(row, col, 0);
+		}
+	}
+	// проверяем нули
+	for (uint16_t row = 0; row < rows; row++) {
+		for (uint16_t col = 0; col < rows; col++) {
+			if (MemReadBit(row, col) == 0) {
+				successes[row] |= _BV(col);
+			} else {
+				failures[row] |= _BV(col);
+			}
+		}
+	}
+	MemRegenerate();
+	MemDebug();
+	// заполняем все единицами
+	for (uint16_t row = 0; row < rows; row++) {
+		for (uint16_t col = 0; col < rows; col++) {
+			MemWriteBit(row, col, 1);
+		}
+	}
+	// проверяем единицы
+	for (uint16_t row = 0; row < rows; row++) {
+		for (uint16_t col = 0; col < rows; col++) {
+			if (MemReadBit(row, col) != 0) {
+				successes[row] |= _BV(col);
+			} else {
+				failures[row] |= _BV(col);
+			}
+		}
+	}
+	MemDebug();
+}
+
+
+void MemDebug() {
+	MemWriteBit(0, 0, 1);
+	MSG_DEC("TST 1 ", MemReadBit(0, 0));
+	MSG_DEC("TST 1 ", MemReadBit(0, 0));
+	MemWriteBit(0, 0, 0);
+	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
+	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
+	MemWriteBit(0, 0, 1);
+	MSG_DEC("TST 1 ", MemReadBit(0, 0));
+	MSG_DEC("TST 1 ", MemReadBit(0, 0));
+	MemWriteBit(0, 0, 0);
+	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
+	MemWriteBit(0, 0, 0);
+	
+	for (uint16_t row = 0; row < rows; row++) {
+		for (uint16_t col = 0; col < rows; col++) {
+			bool good = successes[row] | _BV(col);
+			bool bad = failures[row] | _BV(col);
+			char ch;
+			if (good && !bad) {
+				ch = '.';
+			} else if (bad && !good) {
+				ch = 'x';
+			} else {
+				ch = '?';
+			}
+			uart_putc(ch);
+		}
+		uart_putc('\n');
 	}
 }

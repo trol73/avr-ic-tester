@@ -17,7 +17,9 @@
 
 #include "keyboard.h"
 #include "i18n.h"
-
+#include "test.h"
+#include "tester_io.h"
+#include "memory_test.h"
 
 #define LINES_PER_SCREEN			5	// строк на экране
 #define LINES_DY					9	// расстояние между строками
@@ -25,6 +27,7 @@
 
 uint8_t screen;
 uint8_t selectedIndex;
+
 
 
 
@@ -37,17 +40,24 @@ uint8_t GetScreen() {
 
 
 static void drawMainMenu() {
-	glcd_drawCenteredStr_p(i18n(STR_AUTODETECT), 1, 1);
-	glcd_drawCenteredStr_p(i18n(STR_CUSTOM_TEST), 1+LINES_DY, 1);
-	glcd_drawCenteredStr_p(i18n(STR_MEM_TEST), 1+2*LINES_DY, 1);
-	glcd_drawCenteredStr_p(i18n(STR_ABOUT), 1+3*LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_AUTODETECT, 1, 1);
+	glcd_drawCenteredStr_p(STR_CUSTOM_TEST, 1+LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_MEM_TEST, 1+2*LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_ABOUT, 1+3*LINES_DY, 1);
 	
 	// выделяем текущий
-	glcd_invert_area(5, selectedIndex*LINES_DY, GLCD_LCD_WIDTH-10, LINES_DY);
+	glcd_invert_area(0, selectedIndex*LINES_DY, GLCD_LCD_WIDTH, LINES_DY);
 }
 
 
 static void drawChipAutoTest() {
+	if (selectedIndex) {
+		InitDisplay();
+		glcd_drawCenteredStr(GetDeviceName(), 0, 0);
+	} else {
+		InitDisplay();
+		glcd_draw_string_xy_P(0, 0, STR_UNKNOWN_OR_FAILED);
+	}
 	
 }
 
@@ -76,7 +86,8 @@ static void drawMemoryTest() {
 }
 
 static void drawAboutScreen() {
-	
+	glcd_draw_string_xy_P(0, 0, STR_APPNAME);
+	glcd_draw_string_xy_P(0, 10, STR_VERSION);
 }
 
 void Draw() {
@@ -134,7 +145,7 @@ static void handleMainMenu(uint8_t key) {
 
 static void handleChipAutoTest(uint8_t key) {
 	if (key == KEY_TEST) {
-		
+		selectedIndex = TestLogic();
 	} else {
 		screen = SCREEN_MAIN_MENU;
 	}
@@ -145,11 +156,15 @@ static void handleCustomTest(uint8_t key) {
 }
 
 static void handleMemoryTest(uint8_t key) {
-	
+	if (key == KEY_TEST) {
+		MemInit();
+		TesterDebugStatus(16);
+		MemTest();
+	}
 }
 
 static void handleAbout(uint8_t key) {
-	
+	screen = SCREEN_MAIN_MENU;
 }
 
 
@@ -166,7 +181,7 @@ void onKeyPressed(uint8_t key) {
 			handleCustomTest(key);
 			break;
 		case SCREEN_MEMORY_TEST:
-			handleMemoryTest(key)
+			handleMemoryTest(key);
 			break;
 		case SCREEN_ABOUT:
 			handleAbout(key);
@@ -176,6 +191,14 @@ void onKeyPressed(uint8_t key) {
 }
 
 
+
+void InitDisplay() {
+	glcd_init();
+	glcd_set_contrast(100);
+	glcd_clear();
+	glcd_clear();
+	//	glcd_tiny_set_font(Font5x7, 5, 7, 32, 0xff);
+}
 
 // Рисует строку, отцентрированную по горизонтали
 static void glcd_drawCenteredStr_p(const char *str, uint8_t y, uint8_t dx) {

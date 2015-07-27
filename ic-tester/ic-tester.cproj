@@ -203,6 +203,9 @@
     <Compile Include="memory_test.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="memory_test.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="test.c">
       <SubType>compile</SubType>
     </Compile>
@@ -213,6 +216,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="tester_io.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ui.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ui.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

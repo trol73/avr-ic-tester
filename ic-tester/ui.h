@@ -21,6 +21,8 @@
 #define SCREEN_ABOUT				4
 
 
+void InitDisplay();
+
 uint8_t GetScreen();
 
 void Draw();

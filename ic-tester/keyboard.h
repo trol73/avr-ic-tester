@@ -28,11 +28,11 @@ inline bool key_test_pressed() {
 }
 
 inline bool key_up_pressed() {
-	return (PINA & _BV(2)) == 0;
+	return (PINA & _BV(3)) == 0;
 }
 
 inline bool key_down_pressed() {
-	return (PINA & _BV(3)) == 0;
+	return (PINA & _BV(2)) == 0;
 }
 
 
