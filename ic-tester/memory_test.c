@@ -52,7 +52,7 @@ void MemInit() {
 	DDRC |= _BV(0)|_BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6);
 	DDRD |= _BV(2)|_BV(3)|_BV(4)|_BV(5)|_BV(6)|_BV(7);
 	
-	PORTD &= _BV(7);
+	PORTD &= ~_BV(7);
 	PORTA |= _BV(5);
 //	PORTC |= _BV(1);
 }
