@@ -7,8 +7,11 @@
 
 #include "memory_test.h"
 
+#include <util/delay.h>
 #include <avr/io.h>
+
 #include "debug.h"
+#include "tester_io.h"
 
 /*********************************************************************************************************
 	           __________________
@@ -93,19 +96,17 @@ static void setAddress(uint16_t val) {
 /* Чтение бита памяти                                                   */
 /************************************************************************/
 bool MemReadBit(uint16_t row, uint16_t col) {
-	// A8 -> 0
 	set_RAS();
 	set_CAS();
-
-	setAddress(row);
-
-	clr_RAS();
 	set_WE();
 
-	setAddress(col);
+	setAddress(row);
+	clr_RAS();
 
+	setAddress(col);
 	clr_CAS();
 
+	_delay_us(1);
 	bool result = get_DO();
 
 	set_RAS();
@@ -122,16 +123,16 @@ void MemWriteBit(uint16_t row, uint16_t col, bool val) {
 	set_RAS();
 	set_CAS();
 	
-	setAddress(row);
-	
+	setAddress(row);	
 	clr_RAS();
-	clr_WE();
-	
+
+	clr_WE();	
 	set_DI(val);
 	
-	setAddress(col);
-	
+	setAddress(col);	
 	clr_CAS();
+	
+	_delay_us(1);
 	
 	set_RAS();
 	set_CAS();
@@ -154,63 +155,174 @@ void MemRegenerate() {
 
 
 void MemTest() {
-	rows = 9;
-	// заполняем все нулями
+	//rows = 8;
+	//MemDebug();
+	//MemDebug();
+	//MemDebug();
+	//return;
+	
+	MemWriteBit(0, 0, 1);	MemRegenerate();
+	MemWriteBit(0, 0, 1);	MemRegenerate();
+	MemWriteBit(0, 0, 1);	MemRegenerate();
+	MemWriteBit(5, 5, 0);	MemRegenerate();
+	MemWriteBit(5, 5, 0);	MemRegenerate();
+	MemWriteBit(5, 5, 0);	MemRegenerate();
+	//_delay_us(10);
+	uint8_t r1, r2, r3;
+	r1 = MemReadBit(0, 0);	MemRegenerate();
+	r2 = MemReadBit(0, 0);	MemRegenerate();
+	r3 = MemReadBit(0, 0);	MemRegenerate();
+	MSG_DEC("TST0 1 ", r1);
+	MSG_DEC("TST0 1 ", r2);
+	MSG_DEC("TST0 1 ", r3);
+
+	r1 = MemReadBit(5, 5);	MemRegenerate();
+	r2 = MemReadBit(5, 5);	MemRegenerate();
+	r3 = MemReadBit(5, 5);	MemRegenerate();
+	MSG_DEC("TST5 0 ", r1);
+	MSG_DEC("TST5 0 ", r2);
+	MSG_DEC("TST5 0 ", r3);
+	
+	
+	MemWriteBit(0, 0, 0);	MemRegenerate();
+	MemWriteBit(0, 0, 0);	MemRegenerate();
+	MemWriteBit(0, 0, 0);	MemRegenerate();
+	MemWriteBit(5, 5, 1);	MemRegenerate();
+	MemWriteBit(5, 5, 1);	MemRegenerate();
+	MemWriteBit(5, 5, 1);	MemRegenerate();
+	
+	r1 = MemReadBit(0, 0);	MemRegenerate();
+	r2 = MemReadBit(0, 0);	MemRegenerate();
+	r3 = MemReadBit(0, 0);	MemRegenerate();
+	MSG_DEC("TST0 0 ", r1);
+	MSG_DEC("TST0 0 ", r2);
+	MSG_DEC("TST0 0 ", r3);
+	//_delay_us(10);
+	r1 = MemReadBit(5, 5);	MemRegenerate();
+	r2 = MemReadBit(5, 5);	MemRegenerate();
+	r3 = MemReadBit(5, 5);	MemRegenerate();
+	MSG_DEC("TST5 1 ", r1);
+	MSG_DEC("TST5 1 ", r2);
+	MSG_DEC("TST5 1 ", r3);
+
+	
+
+	
+	rows = 8;
+	
 	for (uint16_t row = 0; row < rows; row++) {
-		for (uint16_t col = 0; col < rows; col++) {
-			MemWriteBit(row, col, 0);
-		}
+		failures[row] = 0;
+		successes[row] = 0;
 	}
-	// проверяем нули
-	for (uint16_t row = 0; row < rows; row++) {
-		for (uint16_t col = 0; col < rows; col++) {
-			if (MemReadBit(row, col) == 0) {
-				successes[row] |= _BV(col);
-			} else {
-				failures[row] |= _BV(col);
-			}
+	
+	// заполняем все нулями
+	for (uint16_t row = 0; row < rows; row += 32) {
+		for (uint16_t col = 0; col < rows; col += 32) {
+			MemWriteBit(row, col, 0);
+			MemRegenerate();
 		}
+		MemRegenerate();
+	}
+	MemRegenerate();
+	uint16_t size = 1 << rows;
+
+	// проверяем нули
+	for (uint16_t row = 0; row < size; row += 32) {
+		for (uint16_t col = 0; col < size; col += 32) {
+			uint16_t r = row / 32;
+			uint32_t c = col / 32;
+			if (MemReadBit(row, col) == 0) {
+				successes[r] |= _BV(c);
+			} else {
+				failures[r] |= _BV(c);
+			}
+			MemRegenerate();
+		}
+		MemRegenerate();
 	}
 	MemRegenerate();
 	MemDebug();
-	// заполняем все единицами
+	
 	for (uint16_t row = 0; row < rows; row++) {
-		for (uint16_t col = 0; col < rows; col++) {
+		failures[row] = 0;
+		successes[row] = 0;
+	}
+	
+	// заполняем все единицами
+	for (uint16_t row = 0; row < size; row += 32) {
+		for (uint16_t col = 0; col < size; col +=32) {
 			MemWriteBit(row, col, 1);
 		}
+		MemRegenerate();
 	}
+	MemRegenerate();
 	// проверяем единицы
-	for (uint16_t row = 0; row < rows; row++) {
-		for (uint16_t col = 0; col < rows; col++) {
+	for (uint16_t row = 0; row < size; row += 32) {
+		for (uint16_t col = 0; col < size; col += 32) {
+			uint16_t r = row / 32;
+			uint32_t c = col / 32;
 			if (MemReadBit(row, col) != 0) {
-				successes[row] |= _BV(col);
+				successes[r] |= _BV(c);
 			} else {
-				failures[row] |= _BV(col);
+				failures[r] |= _BV(c);
 			}
 		}
+		MemRegenerate();
 	}
 	MemDebug();
 }
 
 
 void MemDebug() {
+/*	
 	MemWriteBit(0, 0, 1);
-	MSG_DEC("TST 1 ", MemReadBit(0, 0));
-	MSG_DEC("TST 1 ", MemReadBit(0, 0));
-	MemWriteBit(0, 0, 0);
-	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
-	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
 	MemWriteBit(0, 0, 1);
-	MSG_DEC("TST 1 ", MemReadBit(0, 0));
-	MSG_DEC("TST 1 ", MemReadBit(0, 0));
+	MemWriteBit(0, 0, 1);
+	_delay_us(10);
+	uint8_t r1, r2, r3;
+	r1 = MemReadBit(0, 0);
+	r2 = MemReadBit(0, 0);
+	r3 = MemReadBit(0, 0);
+	MSG_DEC("TST 1 ", r1);
+	MSG_DEC("TST 1 ", r2);
+	MSG_DEC("TST 1 ", r3);
 	MemWriteBit(0, 0, 0);
-	MSG_DEC("TST 0 ", MemReadBit(0, 0));	
 	MemWriteBit(0, 0, 0);
+	MemWriteBit(0, 0, 0);
+	_delay_us(10);
+	r1 = MemReadBit(0, 0);
+	r2 = MemReadBit(0, 0);
+	r3 = MemReadBit(0, 0);
+	MSG_DEC("TST 0 ", r1);	
+	MSG_DEC("TST 0 ", r2);	
+	MSG_DEC("TST 0 ", r3);	
+	MemWriteBit(5, 5, 1);
+	MemWriteBit(5, 5, 1);
+	MemWriteBit(5, 5, 1);
+	_delay_us(10);
+	r1 = MemReadBit(5, 5);
+	r2 = MemReadBit(5, 5);
+	r3 = MemReadBit(5, 5);
+	MSG_DEC("TST 1 ", r1);
+	MSG_DEC("TST 1 ", r2);
+	MSG_DEC("TST 1 ", r3);
+	MemWriteBit(5, 5, 0);
+	MemWriteBit(5, 5, 0);
+	MemWriteBit(5, 5, 0);
+	_delay_us(10);
+	r1 = MemReadBit(5, 5);
+	r2 = MemReadBit(5, 5);
+	r3 = MemReadBit(5, 5);
+	MSG_DEC("TST 0 ", r1);	
+	MSG_DEC("TST 0 ", r2);	
+	MSG_DEC("TST 0 ", r3);	
 	
+	return;
+*/	
 	for (uint16_t row = 0; row < rows; row++) {
 		for (uint16_t col = 0; col < rows; col++) {
-			bool good = successes[row] | _BV(col);
-			bool bad = failures[row] | _BV(col);
+			bool good = successes[row] & _BV(col);
+			bool bad = failures[row] & _BV(col);
 			char ch;
 			if (good && !bad) {
 				ch = '.';
@@ -223,4 +335,6 @@ void MemDebug() {
 		}
 		uart_putc('\n');
 	}
+	uart_putc('\n');
+	uart_putc('\n');
 }

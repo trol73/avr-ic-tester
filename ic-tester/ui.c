@@ -158,7 +158,7 @@ static void handleCustomTest(uint8_t key) {
 static void handleMemoryTest(uint8_t key) {
 	if (key == KEY_TEST) {
 		MemInit();
-		TesterDebugStatus(16);
+		//TesterDebugStatus(16);
 		MemTest();
 	}
 }

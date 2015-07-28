@@ -461,6 +461,7 @@ void TesterDebugStatus(uint8_t pins) {
 	regsToVal28(&regsPort, &valPort);
 	regsToVal28(&regsPin, &valPin);
 	
+	MSG_DEC("pins= ", pins);
 	for (uint8_t i = 1; i <= pins/2; i++) {
 		uint8_t pin = i;
 		uart_putdw_dec(pin); uart_putc(':'); uart_putc(' '); uart_putc(getPinVal28(&valDdr, pin) ? '1' : '0'); uart_putc(getPinVal28(&valPort, pin) ? '1' : '0'); uart_putc(getPinVal28(&valPin, pin) ? '1' : '0'); 
