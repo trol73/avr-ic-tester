@@ -24,9 +24,15 @@
 #define LINES_PER_SCREEN			5	// строк на экране
 #define LINES_DY					9	// расстояние между строками
 
+#define MEM_TEST_STATUS_INSERT_CHIP		0	// ожидание установки микросхемы
+#define MEM_TEST_STATUS_TESTING			1	// тестирование в процессе
+#define MEM_TEST_STATUS_DONE			2	// тестирование завершено
+
+
 
 uint8_t screen;
 uint8_t selectedIndex;
+uint8_t status;
 
 
 
@@ -75,14 +81,49 @@ static void drawCustomTest() {
 
 }
 
-static void drawMemoryTest() {
-	// сетка 9x9    4x4 или 5x5
-	uint8_t size = 8;
-	for (uint8_t row = 0; row < size; row++) {
-		for (uint8_t col = 0; col < size; col++) {
-			
+static void drawMemoryTestResult() {
+	MSG("draw results");
+	const uint8_t step = 6;	// шаг сетки
+	// сетка 8x8 ячеек размером 5x5
+	for (uint8_t i = 0; i <= 8; i++) {
+		glcd_draw_line(i*step, 0, i*step, 8*step, 1);
+		glcd_draw_line(0, i*step-1, 8*step, i*step-1, 1);
+	}
+
+	for (uint8_t row = 0; row < 8; row++) {
+		for (uint8_t col = 0; col < 8; col++) {
+			uint8_t res = MemTestGetCell(row, col);
+			switch (res) {
+				case TEST_CELL_GOOD:
+					glcd_fill_rect(col*step + 2, row*step + 1, 3, 3, 1);
+					break;
+				case TEST_CELL_BAD:
+					glcd_draw_line(col*step+2, row*step+2, col*step+4, row*step+4, 1);
+					glcd_draw_line(col*step+2, row*step+4, col*step+4, row*step+2, 1);
+					break;
+				case TEST_CELL_UNKNOWN:
+					glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+1, 1);
+					glcd_draw_line(col*step+2, row*step+2, col*step+3, row*step+2, 1);
+					glcd_draw_line(col*step+2, row*step+3, col*step+2, row*step+3, 1);
+					break;
+			}
 		}
-	}	
+	}
+}
+
+static void drawMemoryTest() {
+	switch (status) {
+		case MEM_TEST_STATUS_INSERT_CHIP:
+			glcd_drawCenteredStr_p(STR_INSERT_CHIP, 10, 1);
+			glcd_drawCenteredStr_p(STR_AND_PRESS_BUTTON, 18, 1);
+			break;
+		case MEM_TEST_STATUS_TESTING:
+			glcd_drawCenteredStr_p(STR_TESTING, 16, 1);
+			break;
+		case MEM_TEST_STATUS_DONE:
+			drawMemoryTestResult();
+			break;
+	}
 }
 
 static void drawAboutScreen() {
@@ -136,6 +177,7 @@ static void handleMainMenu(uint8_t key) {
 				screen = SCREEN_CUSTOM_TEST;
 			} else if (selectedIndex == 2) {
 				screen = SCREEN_MEMORY_TEST;
+				MemInit();
 			} else {
 				screen = SCREEN_ABOUT;
 			}
@@ -156,10 +198,26 @@ static void handleCustomTest(uint8_t key) {
 }
 
 static void handleMemoryTest(uint8_t key) {
-	if (key == KEY_TEST) {
-		MemInit();
-		//TesterDebugStatus(16);
-		MemTest();
+	switch (status) {
+		case MEM_TEST_STATUS_INSERT_CHIP:
+			if (key == KEY_TEST) {
+				status = MEM_TEST_STATUS_TESTING;
+				Draw();
+				MemTest();
+				status = MEM_TEST_STATUS_DONE;
+			} else {
+				screen = SCREEN_MAIN_MENU;
+				selectedIndex = 2;
+			}
+			break;
+		case MEM_TEST_STATUS_DONE:
+			if (key == KEY_TEST) {
+				status = MEM_TEST_STATUS_INSERT_CHIP;
+			} else {
+				screen = SCREEN_MAIN_MENU;
+				selectedIndex = 2;				
+			}
+			break;
 	}
 }
 

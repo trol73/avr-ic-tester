@@ -19,6 +19,10 @@ DEFSTR(STR_CUSTOM_TEST, "Custom test");
 DEFSTR(STR_MEM_TEST, "Memory test");
 DEFSTR(STR_ABOUT, "About");
 
+DEFSTR(STR_INSERT_CHIP, "Plug chip and");
+DEFSTR(STR_AND_PRESS_BUTTON, "press button");
+DEFSTR(STR_TESTING, "Testing...");
+
 
 
 #endif /* I18N_H_ */
