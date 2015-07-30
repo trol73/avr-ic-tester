@@ -59,7 +59,7 @@ static void drawMainMenu() {
 static void drawChipAutoTest() {
 	if (selectedIndex) {
 		InitDisplay();
-		glcd_drawCenteredStr(GetDeviceName(), 0, 0);
+		glcd_drawCenteredStr(GetDeviceName(), 0, 1);
 	} else {
 		InitDisplay();
 		glcd_draw_string_xy_P(0, 0, STR_UNKNOWN_OR_FAILED);
