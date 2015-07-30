@@ -98,8 +98,8 @@ static void drawMemoryTestResult() {
 					glcd_fill_rect(col*step + 2, row*step + 1, 3, 3, 1);
 					break;
 				case TEST_CELL_BAD:
-					glcd_draw_line(col*step+2, row*step+2, col*step+4, row*step+4, 1);
-					glcd_draw_line(col*step+2, row*step+4, col*step+4, row*step+2, 1);
+					glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+3, 1);
+					glcd_draw_line(col*step+2, row*step+3, col*step+4, row*step+1, 1);
 					break;
 				case TEST_CELL_UNKNOWN:
 					glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+1, 1);
@@ -108,6 +108,17 @@ static void drawMemoryTestResult() {
 					break;
 			}
 		}
+	}
+	
+	glcd_draw_string_xy_P(55, 0, STR_CHIP);
+	if (MemGetRows() == 8) {
+		glcd_draw_string_xy_P(58, LINES_DY, STR_RU5);
+		glcd_draw_string_xy_P(58, 2*LINES_DY, STR_4164);
+	} else if (MemGetRows() == 9) {
+		glcd_draw_string_xy_P(58, LINES_DY, STR_RU7);
+		glcd_draw_string_xy_P(52, 2*LINES_DY, STR_41256);
+	} else {
+		glcd_draw_string_xy_P(58, LINES_DY, STR_NONE);
 	}
 }
 

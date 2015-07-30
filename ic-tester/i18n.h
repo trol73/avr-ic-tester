@@ -23,6 +23,13 @@ DEFSTR(STR_INSERT_CHIP, "Plug chip and");
 DEFSTR(STR_AND_PRESS_BUTTON, "press button");
 DEFSTR(STR_TESTING, "Testing...");
 
+DEFSTR(STR_RU5, "аг5");
+DEFSTR(STR_RU7, "аг7");
+DEFSTR(STR_CHIP, "Chip:");
+DEFSTR(STR_NONE, "none");
+DEFSTR(STR_4164, "4164");
+DEFSTR(STR_41256, "41256")
+
 
 
 #endif /* I18N_H_ */

@@ -44,15 +44,12 @@
 #define set_DI(val)		if (val) PORTD |= _BV(5); else PORTD &= ~_BV(5)
 #define get_DO()		((PINC & _BV(1)) != 0)
 
-uint16_t rows;    // max rows number. 0x100 - 4164, 0x200 - 41256
+uint8_t rows;    // сколько адресных линий используется (8 - РУ5, 9 - РУ7)
 
 #define MEGA32
 
 #ifdef MEGA32
-uint16_t failures_0[8*8];
-uint16_t successes_0[8*8];
-uint16_t failures_1[8*8];
-uint16_t successes_1[8*8];
+uint16_t failures[8*8];
 
 #else
 
@@ -166,11 +163,42 @@ void MemRegenerate() {
 	set_RAS();
 	set_CAS();
 	
-	for (uint16_t row = 0 ; row < rows; row++) {
+	uint16_t size = 1 << rows;
+	for (uint16_t row = 0 ; row < size; row++) {
 		setAddress(row);
 		clr_RAS();
 		set_RAS();
 	}
+}
+
+
+uint8_t MemDetect() {
+	uint8_t result = 0;
+	
+	for (uint8_t i = 0; i < 128; i++) {
+		MemWriteBit(0xff-i, 0xff-i, 1);
+		MemWriteBit(0x1ff-i, 0x1ff-i, 0);
+	
+		bool v1 = MemReadBit(0x1ff-i, 0x1ff-i);
+		bool v0 = MemReadBit(0xff-i, 0xff-i);
+	
+		if (!v1 && v0) {
+			// РУ7
+			if (result > 0 && result != 9) {
+				return 0;
+			}
+			result = 9;
+		} else if (!v1 && !v0) {
+			// РУ5
+			if (result > 0 && result != 8) {
+				return 0;
+			}
+			result = 8;
+		} else {
+			return 0;
+		}
+	}
+	return result;
 }
 
 
@@ -228,18 +256,17 @@ void MemTest() {
 
 	
 
-	
-	rows = 8;
+	rows = MemDetect();
+	if (rows == 0) {
+		return;
+	}
 	
 #ifdef MEGA32
 	for (uint8_t row = 0; row < 8*8; row++) {
 #else
 	for (uint8_t row = 0; row < 8; row++) {
 #endif			
-		failures_0[row] = 0;
-		successes_0[row] = 0;
-		failures_1[row] = 0;
-		successes_1[row] = 0;		
+		failures[row] = 0;
 	}
 
 	uint16_t size = 1 << rows;
@@ -262,10 +289,8 @@ void MemTest() {
 			uint8_t val = MemReadBit(row, col);
 			
 #ifdef MEGA32	
-			if (val == 0) {
-				successes_0[r*8+c]++;
-			} else {
-				failures_0[r*8+c]++;
+			if (val != 0) {
+				failures[r*8+c]++;
 			}
 #else
 			if (val == 0) {
@@ -300,10 +325,8 @@ void MemTest() {
 			uint32_t c = col / numberPerCell;
 			uint8_t val = MemReadBit(row, col);
 #ifdef MEGA32
-			if (val == 1) {
-				successes_1[r*8+c]++;
-			} else {
-				failures_1[r*8+c]++;
+			if (val != 1) {
+				failures[r*8+c]++;
 			}
 #else			
 			if (val == 1) {
@@ -370,7 +393,7 @@ void MemDebug() {
 	for (uint16_t row = 0; row < 8; row++) {
 		for (uint16_t col = 0; col < 8; col++) {
 #ifdef MEGA32 
-			uart_putdw_dec(successes_0[row*8+col]);
+			uart_putdw_dec(failures[row*8+col]);
 			uart_putc(' ');
 			uart_putc(' ');			
 #else
@@ -392,10 +415,10 @@ void MemDebug() {
 	uart_putc('\n');
 	uart_putc('\n');
 	
-	for (uint16_t row = 0; row < rows; row++) {
-		for (uint16_t col = 0; col < rows; col++) {
+	for (uint8_t row = 0; row < rows; row++) {
+		for (uint8_t col = 0; col < rows; col++) {
 #ifdef MEGA32
-			uart_putdw_dec(successes_1[row*8+col]);
+			uart_putdw_dec(failures[row*8+col]);
 			uart_putc(' ');
 			uart_putc(' ');
 #else
@@ -420,22 +443,21 @@ void MemDebug() {
 }
 
 
+
 uint8_t MemTestGetCell(uint8_t row, uint8_t col) {
 #ifdef MEGA32
-	bool good = successes_0[row*8+col] > 0  && successes_1[row*8+col] > 0;
-	bool bad = failures_0[row*8+col] > 0 || failures_1[row*8+col] > 0;
+	bool bad = failures[row*8+col] > 0;
 #else
 	bool good = (successes_0[row] & _BV(col)) && (successes_1[row] & _BV(col));
 	bool bad = (failures_0[row] & _BV(col)) || (failures_1[row] & _BV(col));
 #endif
-
-	if (good && !bad) {
-		return TEST_CELL_GOOD;
-	}
-	if (bad && !good) {
+	if (bad) {
 		return TEST_CELL_BAD;
 	}
-	return TEST_CELL_UNKNOWN;
+	return TEST_CELL_GOOD;
 }
 
 
+uint8_t MemGetRows() {
+	return rows;
+}
