@@ -44,6 +44,10 @@ uint8_t GetScreen() {
 	return screen;
 }
 
+void SetScreen(uint8_t s) {
+	screen = s;
+}
+
 
 static void drawMainMenu() {
 	glcd_drawCenteredStr_p(STR_AUTODETECT, 1, 1);
@@ -62,7 +66,7 @@ static void drawChipAutoTest() {
 		glcd_drawCenteredStr(GetDeviceName(), 0, 1);
 	} else {
 		InitDisplay();
-		glcd_draw_string_xy_P(0, 0, STR_UNKNOWN_OR_FAILED);
+		glcd_drawCenteredStr_p(STR_UNKNOWN_OR_FAILED, 15, 1);
 	}
 	
 }
@@ -162,6 +166,11 @@ void Draw() {
 		case SCREEN_ABOUT:
 			drawAboutScreen();
 			break;
+		case SCREEN_EJECT_CHIP:
+			glcd_drawCenteredStr_p(STR_EJECT_CHIP, 5, 1);
+			glcd_drawCenteredStr_p(STR_AND_PRESS, 5+LINES_DY, 1);
+			glcd_drawCenteredStr_p(STR_TEST_BUTTON, 5, 1);
+			break;
 	}
 	glcd_write();
 }
@@ -254,6 +263,11 @@ void onKeyPressed(uint8_t key) {
 			break;
 		case SCREEN_ABOUT:
 			handleAbout(key);
+			break;
+		case SCREEN_EJECT_CHIP:
+			if (key == KEY_TEST) {
+				screen = SCREEN_CHIP_AUTO_TEST;
+			}
 			break;
 	}
 	Draw();	

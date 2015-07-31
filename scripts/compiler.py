@@ -354,7 +354,10 @@ class Chip:
         f.write("0,\n")
         size += 1
 
-        f.write('\tCMD_RESET,\n')
+        #if self.pins >= 24:
+        f.write('\tCMD_RESET_FULL,\n')
+        #else:
+        #    f.write('\tCMD_RESET,\n')
         size += 1
 
         if self.pins <= 16:

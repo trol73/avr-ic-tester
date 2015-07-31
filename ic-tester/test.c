@@ -11,6 +11,8 @@
 #include "debug.h"
 
 #include "data.h"
+#include "ui.h"
+#include "keyboard.h"
 
 #include <util/delay.h>
 
@@ -217,6 +219,10 @@ bool TestData(uint8_t **ptr) {
 
 
 bool TestLogic() {
+	// микросхемы DIP-24 и DIP-28 могут "нажимать" на дополнительные клавиши своими выводами
+	// поэтому, перед тестом смотрим, эти пины и, если они установлены, то после теста выводим экран с предложением извлечь МС
+	
+	bool isBigChip = key_up_pressed() || key_down_pressed();
 	uint8_t *ptr = (uint8_t*)&LOGIC_DATA[0];
 	while (true) {
 		uint8_t cmd = pgm_read_byte(ptr);
@@ -230,6 +236,10 @@ bool TestLogic() {
 		}
 	}
 	TesterReset(false);
+	
+	if (isBigChip && (key_up_pressed() || key_down_pressed())) {
+		SetScreen(SCREEN_EJECT_CHIP);
+	}
 	return false;
 }
 
