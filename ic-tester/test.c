@@ -15,9 +15,10 @@
 #include "keyboard.h"
 
 #include <util/delay.h>
+#include <string.h>
 
 char chipName[32];
-
+char testResultName[128];
 
 static void pgm_read_val16(const uint8_t *buffer, val16_t *val) {
 	val->b0 = pgm_read_byte(buffer);
@@ -219,30 +220,29 @@ bool TestData(uint8_t **ptr) {
 
 
 bool TestLogic() {
-	// микросхемы DIP-24 и DIP-28 могут "нажимать" на дополнительные клавиши своими выводами
-	// поэтому, перед тестом смотрим, эти пины и, если они установлены, то после теста выводим экран с предложением извлечь МС
-	
-	bool isBigChip = key_up_pressed() || key_down_pressed();
 	uint8_t *ptr = (uint8_t*)&LOGIC_DATA[0];
+	testResultName[0] = 0;
+	bool result = false;
 	while (true) {
 		uint8_t cmd = pgm_read_byte(ptr);
 		if (cmd == CMD_END) {
 			break;
 		}
-		bool result = TestData(&ptr);
-		if (result) {
-			TesterReset(false);
-			return true;
+		if (TestData(&ptr)) {
+			result = true;
+			uint8_t len = strlen(testResultName);
+			if (len > 0) {
+				testResultName[len] = ',';
+				testResultName[len+1] = 0;
+			}
+			strcat(testResultName, chipName);
 		}
 	}
 	TesterReset(false);
 	
-	if (isBigChip && (key_up_pressed() || key_down_pressed())) {
-		SetScreen(SCREEN_EJECT_CHIP);
-	}
-	return false;
+	return result;
 }
 
 char* GetDeviceName() {
-	return chipName;
+	return testResultName;
 }

@@ -24,9 +24,9 @@
 #define LINES_PER_SCREEN			5	// строк на экране
 #define LINES_DY					9	// расстояние между строками
 
-#define MEM_TEST_STATUS_INSERT_CHIP		0	// ожидание установки микросхемы
-#define MEM_TEST_STATUS_TESTING			1	// тестирование в процессе
-#define MEM_TEST_STATUS_DONE			2	// тестирование завершено
+#define STATUS_INSERT_CHIP		0	// ожидание установки микросхемы
+#define STATUS_TESTING			1	// тестирование в процессе
+#define STATUS_DONE				2	// тестирование завершено
 
 
 
@@ -61,13 +61,25 @@ static void drawMainMenu() {
 
 
 static void drawChipAutoTest() {
-	if (selectedIndex) {
-		InitDisplay();
-		glcd_drawCenteredStr(GetDeviceName(), 0, 1);
-	} else {
-		InitDisplay();
-		glcd_drawCenteredStr_p(STR_UNKNOWN_OR_FAILED, 15, 1);
+	switch (status) {
+		case STATUS_INSERT_CHIP:
+			glcd_drawCenteredStr_p(STR_INSERT_CHIP, 10, 1);
+			glcd_drawCenteredStr_p(STR_AND_PRESS_BUTTON, 18, 1);
+			break;
+		case STATUS_TESTING:
+			glcd_drawCenteredStr_p(STR_TESTING, 16, 1);
+			break;
+		case STATUS_DONE:
+			if (selectedIndex) {
+				InitDisplay();
+				glcd_drawCenteredStr(GetDeviceName(), 0, 1);
+			} else {
+				InitDisplay();
+				glcd_drawCenteredStr_p(STR_UNKNOWN_OR_FAILED, 15, 1);
+			}		
+			break;
 	}
+
 	
 }
 
@@ -128,14 +140,14 @@ static void drawMemoryTestResult() {
 
 static void drawMemoryTest() {
 	switch (status) {
-		case MEM_TEST_STATUS_INSERT_CHIP:
+		case STATUS_INSERT_CHIP:
 			glcd_drawCenteredStr_p(STR_INSERT_CHIP, 10, 1);
 			glcd_drawCenteredStr_p(STR_AND_PRESS_BUTTON, 18, 1);
 			break;
-		case MEM_TEST_STATUS_TESTING:
+		case STATUS_TESTING:
 			glcd_drawCenteredStr_p(STR_TESTING, 16, 1);
 			break;
-		case MEM_TEST_STATUS_DONE:
+		case STATUS_DONE:
 			drawMemoryTestResult();
 			break;
 	}
@@ -166,11 +178,6 @@ void Draw() {
 		case SCREEN_ABOUT:
 			drawAboutScreen();
 			break;
-		case SCREEN_EJECT_CHIP:
-			glcd_drawCenteredStr_p(STR_EJECT_CHIP, 5, 1);
-			glcd_drawCenteredStr_p(STR_AND_PRESS, 5+LINES_DY, 1);
-			glcd_drawCenteredStr_p(STR_TEST_BUTTON, 5, 1);
-			break;
 	}
 	glcd_write();
 }
@@ -193,10 +200,12 @@ static void handleMainMenu(uint8_t key) {
 		case KEY_TEST:
 			if (selectedIndex == 0) {
 				screen = SCREEN_CHIP_AUTO_TEST;
+				status = STATUS_INSERT_CHIP;
 			} else if (selectedIndex == 1) {
 				screen = SCREEN_CUSTOM_TEST;
 			} else if (selectedIndex == 2) {
 				screen = SCREEN_MEMORY_TEST;
+				status = STATUS_INSERT_CHIP;
 				MemInit();
 			} else {
 				screen = SCREEN_ABOUT;
@@ -205,12 +214,28 @@ static void handleMainMenu(uint8_t key) {
 	}
 }
 
-static void handleChipAutoTest(uint8_t key) {
-	if (key == KEY_TEST) {
-		selectedIndex = TestLogic();
-	} else {
-		screen = SCREEN_MAIN_MENU;
+static bool handleChipAutoTest(uint8_t key) {
+	switch (status) {
+		case STATUS_INSERT_CHIP:
+			if (key == KEY_TEST) {
+				status = STATUS_TESTING;
+				Draw();
+				selectedIndex = TestLogic();
+				status = STATUS_DONE;
+			}
+			break;
+		case STATUS_TESTING:
+			return true;
+		case STATUS_DONE:
+			if (key == KEY_TEST) {
+				selectedIndex = 0;
+				screen = SCREEN_MAIN_MENU;
+			} else {
+				return true;
+			}
+			break;
 	}
+	return false;
 }
 
 static void handleCustomTest(uint8_t key) {
@@ -219,20 +244,20 @@ static void handleCustomTest(uint8_t key) {
 
 static void handleMemoryTest(uint8_t key) {
 	switch (status) {
-		case MEM_TEST_STATUS_INSERT_CHIP:
+		case STATUS_INSERT_CHIP:
 			if (key == KEY_TEST) {
-				status = MEM_TEST_STATUS_TESTING;
+				status = STATUS_TESTING;
 				Draw();
 				MemTest();
-				status = MEM_TEST_STATUS_DONE;
+				status = STATUS_DONE;
 			} else {
 				screen = SCREEN_MAIN_MENU;
 				selectedIndex = 2;
 			}
 			break;
-		case MEM_TEST_STATUS_DONE:
+		case STATUS_DONE:
 			if (key == KEY_TEST) {
-				status = MEM_TEST_STATUS_INSERT_CHIP;
+				status = STATUS_INSERT_CHIP;
 			} else {
 				screen = SCREEN_MAIN_MENU;
 				selectedIndex = 2;				
@@ -253,7 +278,9 @@ void onKeyPressed(uint8_t key) {
 			handleMainMenu(key);
 			break;
 		case SCREEN_CHIP_AUTO_TEST:
-			handleChipAutoTest(key);
+			if (handleChipAutoTest(key)) {
+				return;
+			};
 			break;
 		case SCREEN_CUSTOM_TEST:
 			handleCustomTest(key);
@@ -263,11 +290,6 @@ void onKeyPressed(uint8_t key) {
 			break;
 		case SCREEN_ABOUT:
 			handleAbout(key);
-			break;
-		case SCREEN_EJECT_CHIP:
-			if (key == KEY_TEST) {
-				screen = SCREEN_CHIP_AUTO_TEST;
-			}
 			break;
 	}
 	Draw();	

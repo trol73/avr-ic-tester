@@ -19,7 +19,6 @@
 #define SCREEN_CUSTOM_TEST				2
 #define SCREEN_MEMORY_TEST				3
 #define SCREEN_ABOUT					4
-#define SCREEN_EJECT_CHIP				5
 
 
 void InitDisplay();
