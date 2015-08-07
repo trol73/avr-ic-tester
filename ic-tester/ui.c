@@ -33,7 +33,7 @@
 uint8_t screen;
 uint8_t selectedIndex;
 uint8_t status;
-
+uint8_t package;
 
 
 
@@ -83,18 +83,57 @@ static void drawChipAutoTest() {
 	
 }
 
+static void drawSelectPackageScreen() {
+	glcd_drawCenteredStr_p(STR_BACK, 1, 1);
+	glcd_drawCenteredStr_p(STR_DIP_8, 1+LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_DIP_14, 1+2*LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_DIP_16, 1+3*LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_DIP_20, 1+4*LINES_DY, 1);
+	
+	// выделяем текущий
+	glcd_invert_area(20, selectedIndex*LINES_DY, GLCD_LCD_WIDTH-40, LINES_DY);		
+}
+
 static void drawCustomTest() {
 	// 84 x 48
-	// >[# ]       >[##] 	
-	// <[##]       >[##]    CFG
-	// >[##]       <[##]    SET
-	// >[ #]       <[##]    EXIT
-	//-----------------
-	// >[# ]       >[##]
-	// >[# ]       <[##]
-	// >[# ]       <[##]
-	// >[  ]       <[##]
 
+	const uint8_t len = package/2;
+	const uint8_t dx = 82 / len;
+	for (uint8_t i = 0; i < len; i++) {
+		uint8_t x = i*dx + 4;
+		uint8_t y = i < 9 ? 39 : 37;
+		// нижний ряд: 1..10
+		glcd_draw_char_xy_ex(x, y, 0x90 + i, false);
+		glcd_draw_char_xy_ex(x, 40, 0xAC + (i & 3), false);	// io
+		glcd_draw_char_xy_ex(x, y-6, 0xA5 + (i & 1), false);	// state
+
+		// верхний ряд: 11..20
+		uint8_t v = 2*len-i-1;
+		glcd_draw_char_xy_ex(x, 5, 0x90 + v, false);
+		glcd_draw_char_xy_ex(x, 0, 0xA8 + (i & 3), false);	// io
+		glcd_draw_char_xy_ex(x, v < 19 ? 11 : 13, 0xA5 + (i & 1), false);	// state
+	}
+	glcd_draw_string_xy_P(11, 20, STR_SETUP);
+	glcd_draw_string_xy_P(54, 20, STR_EXIT);
+	glcd_draw_rect(0, 3, 84, 48-7, 1);
+	glcd_draw_char_xy_ex(1, 20, 0xA7, false);//0xA7);
+	//glcd_draw_char_xy(18, 20, '}');
+	
+	if (selectedIndex < len) {
+		// нижний ряд пинов
+		uint8_t x = selectedIndex*dx + 3;
+		glcd_invert_area(x-1, 28, 9, 15);
+	} else if (selectedIndex < package) {
+		// верхний ряд пинов
+		uint8_t x = (2*len-selectedIndex-1)*dx + 3;
+		glcd_invert_area(x-1, 4, 9, 15);
+	} else if (selectedIndex == package) {
+		// setup
+		glcd_invert_area(9, 19, 33, 10);
+	} else {
+		// exit
+		glcd_invert_area(52, 19, 27, 10);
+	}
 }
 
 static void drawMemoryTestResult() {
@@ -169,7 +208,10 @@ void Draw() {
 		case SCREEN_CHIP_AUTO_TEST:
 			drawChipAutoTest();
 			break;
-		case SCREEN_CUSTOM_TEST:
+		case SCREEN_SELECT_PACKAGE:
+			drawSelectPackageScreen();
+			break;
+		case SCREEN_CUSTOM_TESTER:
 			drawCustomTest();
 			break;
 		case SCREEN_MEMORY_TEST:
@@ -202,7 +244,8 @@ static void handleMainMenu(uint8_t key) {
 				screen = SCREEN_CHIP_AUTO_TEST;
 				status = STATUS_INSERT_CHIP;
 			} else if (selectedIndex == 1) {
-				screen = SCREEN_CUSTOM_TEST;
+				screen = SCREEN_SELECT_PACKAGE;
+				selectedIndex = 0;
 			} else if (selectedIndex == 2) {
 				screen = SCREEN_MEMORY_TEST;
 				status = STATUS_INSERT_CHIP;
@@ -239,7 +282,61 @@ static bool handleChipAutoTest(uint8_t key) {
 }
 
 static void handleCustomTest(uint8_t key) {
-	
+	switch (key) {
+		case KEY_UP:
+			if (selectedIndex > 0) {
+				selectedIndex--;
+			} else {
+				selectedIndex = package+1;
+			}
+			break;
+		case KEY_DOWN:
+			if (selectedIndex <= package) {
+				selectedIndex++;
+			} else {
+				selectedIndex = 0;
+			}
+			break;
+		case KEY_TEST:
+			if (selectedIndex > package) {
+				selectedIndex = 1;
+				screen = SCREEN_MAIN_MENU;
+			}
+			break;
+	}
+}
+
+static void handleSelectPackage(uint8_t key) {
+	switch(key) {
+		case KEY_UP:
+			if (selectedIndex > 0) {
+				selectedIndex--;
+			}
+			break;
+		case KEY_DOWN:
+			if (selectedIndex < 4) {
+				selectedIndex++;
+			}
+			break;
+		case KEY_TEST:
+			if (selectedIndex == 0) {
+				screen = SCREEN_MAIN_MENU;
+				selectedIndex = 1;
+			} else {
+				screen = SCREEN_CUSTOM_TESTER;
+				if (selectedIndex == 1) {
+					package = 8;
+				} else if (selectedIndex == 2) {
+					package = 14;
+				} else if (selectedIndex == 3) {
+					package = 16;
+				} else {
+					package = 20;
+				}
+				selectedIndex = 0;
+			}
+			break;
+	}	
 }
 
 static void handleMemoryTest(uint8_t key) {
@@ -282,8 +379,11 @@ void onKeyPressed(uint8_t key) {
 				return;
 			};
 			break;
-		case SCREEN_CUSTOM_TEST:
+		case SCREEN_CUSTOM_TESTER:
 			handleCustomTest(key);
+			break;
+		case SCREEN_SELECT_PACKAGE:
+			handleSelectPackage(key);
 			break;
 		case SCREEN_MEMORY_TEST:
 			handleMemoryTest(key);

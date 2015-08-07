@@ -122,6 +122,7 @@ typedef struct {
 } glcd_BoundingBox_t;
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "glcd_devices.h"
 #include "glcd_controllers.h"
 #include "glcd_graphics.h"

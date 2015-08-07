@@ -70,7 +70,7 @@ void glcd_font(const char * font_table, uint8_t width, uint8_t height, char star
 	font_current.table_type = type; /* Only supports MikroElektronika generated format at the moment */
 }
 
-uint8_t glcd_draw_char_xy(uint8_t x, uint8_t y, char c)
+uint8_t glcd_draw_char_xy_ex(uint8_t x, uint8_t y, char c, bool clearWhite)
 {
 	if (c < font_current.start_char || c > font_current.end_char) {
 		c = '.';
@@ -96,7 +96,7 @@ uint8_t glcd_draw_char_xy(uint8_t x, uint8_t y, char c)
 				}
 				if (dat & (1<<j)) {
 					glcd_set_pixel(x+i,y+j,BLACK);
-				} else {
+				} else if (clearWhite) {
 					glcd_set_pixel(x+i,y+j,WHITE);
 				}
 			}
@@ -260,6 +260,10 @@ uint8_t glcd_draw_char_xy(uint8_t x, uint8_t y, char c)
 		
 	}
 
+}
+
+uint8_t glcd_draw_char_xy(uint8_t x, uint8_t y, char c) {
+	return glcd_draw_char_xy_ex(x, y, c, true);
 }
 
 uint8_t glcd_draw_string_xy(uint8_t x, uint8_t y, char *c)
