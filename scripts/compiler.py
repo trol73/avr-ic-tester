@@ -516,6 +516,8 @@ class Chip:
             return dip16_to_dip28(pin)
         elif self.pins == 20:
             return dip20_to_dip28(pin)
+        elif self.pins == 24:
+            return dip24_to_dip28(pin)
         elif self.pins == 28:
             return pin
         else:
