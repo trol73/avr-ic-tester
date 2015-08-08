@@ -28,17 +28,20 @@
 #define STATUS_TESTING			1	// тестирование в процессе
 #define STATUS_DONE				2	// тестирование завершено
 
-
+#define STATUS_SETUP			0	// настройка пинов на ввод/вывод
+#define STATUS_OUT				1	// установка уровней на выводах
 
 uint8_t screen;
 uint8_t selectedIndex;
 uint8_t status;
-uint8_t package;
+
+uint8_t package;			// сколько выводов у микросхемы (ручной тест)
 
 
 
 static void glcd_drawCenteredStr_p(const char *str, uint8_t y, uint8_t dx);
 static void glcd_drawCenteredStr(const char *str, uint8_t y, uint8_t dx);
+
 
 uint8_t GetScreen() {
 	return screen;
@@ -97,43 +100,87 @@ static void drawSelectPackageScreen() {
 static void drawCustomTest() {
 	// 84 x 48
 
+	val24_t valuesDdr, valuesPort, valuesPin;
+
+	ReadAll24(&valuesDdr, &valuesPort, &valuesPin);
 	const uint8_t len = package/2;
 	const uint8_t dx = 82 / len;
 	for (uint8_t i = 0; i < len; i++) {
 		uint8_t x = i*dx + 4;
-		uint8_t y = i < 9 ? 39 : 37;
+		uint8_t y = i < 9 ? 38 : 36;
+		
 		// нижний ряд: 1..10
+		uint8_t pin24 = i + 1;
+		bool ddr = getPinVal24(&valuesDdr, pin24);
+		bool pin = getPinVal24(&valuesPin, pin24);
+		bool out = getPinVal24(&valuesPort, pin24);
+		//if (ddr) pin = out;
+		uint8_t io = pin ? 0 : 2;
+		if (!ddr) {
+			io++;
+		}
 		glcd_draw_char_xy_ex(x, y, 0x90 + i, false);
-		glcd_draw_char_xy_ex(x, 40, 0xAC + (i & 3), false);	// io
-		glcd_draw_char_xy_ex(x, y-6, 0xA5 + (i & 1), false);	// state
+		glcd_draw_char_xy_ex(x, 40, 0xAC + io, false);	// io
+		glcd_draw_char_xy_ex(x, y-6, 0xA5 + out, false);	// state
 
 		// верхний ряд: 11..20
-		uint8_t v = 2*len-i-1;
-		glcd_draw_char_xy_ex(x, 5, 0x90 + v, false);
-		glcd_draw_char_xy_ex(x, 0, 0xA8 + (i & 3), false);	// io
-		glcd_draw_char_xy_ex(x, v < 19 ? 11 : 13, 0xA5 + (i & 1), false);	// state
+		uint8_t v = 2*len-i-1;		
+		pin24 = v + 1 + 24 - package;
+		ddr = getPinVal24(&valuesDdr, pin24);
+		pin = getPinVal24(&valuesPin, pin24);
+		out = getPinVal24(&valuesPort, pin24);
+		//if (ddr) pin = out;
+		io = pin ? 0 : 2;
+		if (!ddr) {
+			io++;
+		}
+		glcd_draw_char_xy_ex(x, 7, 0x90 + v, false);
+		glcd_draw_char_xy_ex(x, 1, 0xA8 + io, false);	// io
+		glcd_draw_char_xy_ex(x, v < 19 ? 13 : 15, 0xA5 + out, false);	// state
+		
+			//0x01 , 0x03 , 0x07 , 0x03 , 0x01,	// вход верхний 1	0xA8
+			//0x04 , 0x06 , 0x07 , 0x06 , 0x04,	// выход верхний 1	0xA9
+			//0x01 , 0x02 , 0x04 , 0x02 , 0x01,	// вход верхний 0	0xAA
+			//0x04 , 0x02 , 0x01 , 0x02 , 0x04,	// выход верхний 0	0xAB
 	}
-	glcd_draw_string_xy_P(11, 20, STR_SETUP);
+	if (status == STATUS_SETUP) {
+		glcd_draw_string_xy_P(11, 20, STR_SETUP);
+	} else {
+		glcd_draw_string_xy_P(11, 20, STR_OUT);
+	}
 	glcd_draw_string_xy_P(54, 20, STR_EXIT);
-	glcd_draw_rect(0, 3, 84, 48-7, 1);
-	glcd_draw_char_xy_ex(1, 20, 0xA7, false);//0xA7);
+
 	//glcd_draw_char_xy(18, 20, '}');
 	
 	if (selectedIndex < len) {
 		// нижний ряд пинов
 		uint8_t x = selectedIndex*dx + 3;
-		glcd_invert_area(x-1, 28, 9, 15);
+		if (status == STATUS_OUT) {
+			glcd_invert_area(x-1, 28, 9, 15);
+		} else {
+			if (selectedIndex == 9) {
+				glcd_invert_area(x-1, 35, 9, 13);
+			} else {
+				glcd_invert_area(x-1, 37, 9, 11);
+			}
+		}
 	} else if (selectedIndex < package) {
 		// верхний ряд пинов
 		uint8_t x = (2*len-selectedIndex-1)*dx + 3;
-		glcd_invert_area(x-1, 4, 9, 15);
+		if (status == STATUS_OUT) {
+			glcd_invert_area(x-1, 4, 9, selectedIndex == 19 ? 18 : 16);	
+		} else {
+			glcd_invert_area(x-1, 0, 9, selectedIndex == 19 ? 15 : 13);		
+		}
 	} else if (selectedIndex == package) {
-		// setup
-		glcd_invert_area(9, 19, 33, 10);
+		// setup/out
+		glcd_invert_area(9, 19, status == STATUS_SETUP ? 33 : 23, 10);
 	} else {
 		// exit
 		glcd_invert_area(52, 19, 27, 10);
 	}
+	glcd_draw_rect(0, 4, 84, 40, 1);
+	glcd_draw_char_xy_ex(1, 20, 0xA7, false);
 }
 
 static void drawMemoryTestResult() {
@@ -301,6 +348,14 @@ static void handleCustomTest(uint8_t key) {
 			if (selectedIndex > package) {
 				selectedIndex = 1;
 				screen = SCREEN_MAIN_MENU;
+			} else if (selectedIndex == package) {
+				status = status == STATUS_SETUP ? STATUS_OUT : STATUS_SETUP;
+			} else {
+				if (status == STATUS_SETUP) {
+					invertPinDirection(selectedIndex+1, package);
+				} else {
+					invertPinOut(selectedIndex+1, package);
+				}
 			}
 			break;
 	}
@@ -334,6 +389,7 @@ static void handleSelectPackage(uint8_t key) {
 					package = 20;
 				}
 				selectedIndex = 0;
+				status = STATUS_SETUP;
 			}
 			break;
 	}	
@@ -394,7 +450,6 @@ void onKeyPressed(uint8_t key) {
 	}
 	Draw();	
 }
-
 
 
 void InitDisplay() {

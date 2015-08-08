@@ -63,9 +63,6 @@ static void regsToVal16(regs_t *regs, val16_t *val);
 static void regsToVal24(regs_t *regs, val24_t *val);
 static void regsToVal28(regs_t *regs, val28_t *val);
 
-bool getPinVal16(val16_t *val, uint8_t pin);
-bool getPinVal24(val24_t *val, uint8_t pin);
-bool getPinVal28(val28_t *val, uint8_t pin);
 
 #define read_registers_16(reg)		regs.a = reg##A; regs.c = reg##C; regs.d = reg##D;
 #define read_registers(reg)			regs.a = reg##A; regs.b = reg##B; regs.c = reg##C; regs.d = reg##D;
@@ -471,4 +468,44 @@ void TesterDebugStatus(uint8_t pins) {
 		uart_putdw_dec(pin); uart_putc(':'); uart_putc(' '); uart_putc(getPinVal28(&valDdr, pin+delta) ? '1' : '0'); uart_putc(getPinVal28(&valPort, pin+delta) ? '1' : '0'); uart_putc(getPinVal28(&valPin, pin+delta) ? '1' : '0'); 
 		uart_putc('\n');
 	}
+}
+
+void invertPinDirection(uint8_t pin, uint8_t package) {
+	regs_t regs;
+	val24_t val;
+
+	uint8_t pin24 = pin <= package/2 ? pin : pin + 24 - package;
+	
+	read_registers(DDR);
+	regsToVal24(&regs, &val);
+	bool v = getPinVal24(&val, pin24);
+	setVal24Pin(&val, pin24, !v);
+	val24toRegs(&val, &regs, OPERATION_COPY);
+	write_registers(DDR);
+}
+
+void invertPinOut(uint8_t pin, uint8_t package) {
+	regs_t regs;
+	val24_t val;
+
+	uint8_t pin24 = pin <= package/2 ? pin : pin + 24 - package;
+	
+	read_registers(PORT);
+	regsToVal24(&regs, &val);
+	bool v = getPinVal24(&val, pin24);
+	setVal24Pin(&val, pin24, !v);
+	val24toRegs(&val, &regs, OPERATION_COPY);
+	write_registers(PORT);	
+}
+
+
+void ReadAll24(val24_t *ddr, val24_t *port, val24_t *pin) {
+	regs_t regs;
+	
+	read_registers(DDR);
+	regsToVal24(&regs, ddr);
+	read_registers(PORT);
+	regsToVal24(&regs, port);
+	read_registers(PIN);
+	regsToVal24(&regs, pin);	
 }

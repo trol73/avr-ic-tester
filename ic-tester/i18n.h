@@ -25,6 +25,7 @@ DEFSTR(STR_TESTING, "Testing...");
 DEFSTR(STR_BACK, "Back");
 DEFSTR(STR_SETUP, "setup");
 DEFSTR(STR_EXIT, "exit");
+DEFSTR(STR_OUT, "out");
 
 
 DEFSTR(STR_RU5, "аг5");

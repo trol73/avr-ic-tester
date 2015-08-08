@@ -156,6 +156,17 @@ bool IsFullMode();
 void TesterDebugStatus(uint8_t pins);
 
 
+bool getPinVal16(val16_t *val, uint8_t pin);
+bool getPinVal24(val24_t *val, uint8_t pin);
+bool getPinVal28(val28_t *val, uint8_t pin);
+
+
 void TesterSetPin(uint8_t pin, bool level);
+
+void invertPinDirection(uint8_t pin, uint8_t package);
+
+void invertPinOut(uint8_t pin, uint8_t package);
+
+void ReadAll24(val24_t *ddr, val24_t *port, val24_t *pin);
 
 #endif // TESTER_IO_H_
