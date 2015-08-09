@@ -137,11 +137,6 @@ static void drawCustomTest() {
 		glcd_draw_char_xy_ex(x, 7, 0x90 + v, false);
 		glcd_draw_char_xy_ex(x, 1, 0xA8 + io, false);	// io
 		glcd_draw_char_xy_ex(x, v < 19 ? 13 : 15, 0xA5 + out, false);	// state
-		
-			//0x01 , 0x03 , 0x07 , 0x03 , 0x01,	// вход верхний 1	0xA8
-			//0x04 , 0x06 , 0x07 , 0x06 , 0x04,	// выход верхний 1	0xA9
-			//0x01 , 0x02 , 0x04 , 0x02 , 0x01,	// вход верхний 0	0xAA
-			//0x04 , 0x02 , 0x01 , 0x02 , 0x04,	// выход верхний 0	0xAB
 	}
 	if (status == STATUS_SETUP) {
 		glcd_draw_string_xy_P(11, 20, STR_SETUP);

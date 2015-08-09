@@ -76,9 +76,6 @@ bool TestData(uint8_t **ptr) {
 				{
 					val24_t mask;
 					pgm_read_val24(*ptr, &mask);
-					MSG_HEX("init_0 ", mask.b0, 1);
-					MSG_HEX("init_1 ", mask.b1, 1);
-					MSG_HEX("init_2 ", mask.b2, 1);
 					*ptr += 3;
 					TesterConfig24(&mask);
 				}

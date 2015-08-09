@@ -142,6 +142,8 @@ class Chip:
     outputs = []  # номера выходов
     pullUpOutputs = []
     commands = []
+    currentInputs = []
+    currentOutputs = []
 
     def __init__(self):
         self.powerMinus = []
@@ -150,6 +152,8 @@ class Chip:
         self.outputs = []
         self.pullUpOutputs = []
         self.commands = []
+        self.currentInputs = []
+        self.currentOutputs = []
 
     def load_line(self, line):
         if line.startswith('CHIP['):
@@ -181,6 +185,7 @@ class Chip:
                     print 'ERROR: wrong pin number', n, 'for DIP-'+str(self.pins)
                     sys.exit(-1)
                 self.inputs.append(n)
+            self.currentInputs = self.inputs
         elif line.startswith('OUT:'):
             outputs = line[len('OUT:'):].split(',')
             for out in outputs:
@@ -200,6 +205,7 @@ class Chip:
                         print 'ERROR: wrong pin number', n, 'for DIP-'+str(self.pins)
                         sys.exit(-1)
                     self.outputs.append(n)
+            self.currentOutputs = self.outputs
         elif line.startswith('SET:'):
             cmd = Command('set')
             sc = line[len('SET:'):].strip()
@@ -218,11 +224,11 @@ class Chip:
                         sys.exit(-1)
             else:
                 sc = sc.replace(':', '')
-                if len(sc) == len(self.inputs):
+                if len(sc) == len(self.currentInputs):
                     index = 0
                     list1 = ''
                     list0 = ''
-                    for inp in self.inputs:
+                    for inp in self.currentInputs:
                         if sc[index] == '1':
                             list1 = list1 + str(inp) + ','
                         elif sc[index] == '0':
@@ -261,17 +267,17 @@ class Chip:
                 args = sc.split('=>')
                 from_val = args[0].strip().replace(':', '')
                 to_val = args[1].strip().replace(':', '')
-                if len(from_val) != len(self.inputs):
+                if len(from_val) != len(self.currentInputs):
                     print 'ERROR: TEST syntax error:', from_val
                     sys.exit(-1)
-                if len(to_val) != len(self.outputs):
+                if len(to_val) != len(self.currentOutputs):
                     print 'ERROR: TEST syntax error:', to_val
                     sys.exit(-1)
 
                 index = 0
                 list1 = ''
                 list0 = ''
-                for inp in self.inputs:
+                for inp in self.currentInputs:
                     if from_val[index] == '1':
                         list1 = list1 + str(inp) + ','
                     elif from_val[index] == '0':
@@ -286,7 +292,7 @@ class Chip:
                 index = 0
                 list1 = ''
                 list0 = ''
-                for out in self.outputs:
+                for out in self.currentOutputs:
                     if to_val[index] == '1':
                         list1 = list1 + str(out) + ','
                     elif to_val[index] == '0':
@@ -300,11 +306,11 @@ class Chip:
 
             else:
                 sc = sc.replace(':', '')
-                if len(sc) == len(self.outputs):
+                if len(sc) == len(self.currentOutputs):
                     index = 0
                     list1 = ''
                     list0 = ''
-                    for out in self.outputs:
+                    for out in self.currentOutputs:
                         if sc[index] == '1':
                             list1 = list1 + str(out) + ','
                         elif sc[index] == '0':
@@ -329,10 +335,36 @@ class Chip:
                 cmd = Command('pulse-')
             else:
                 print 'ERROR: wrong argument - ', sc
+                sys.exit(-1)
 
             cmd.pin = int(sc[1:].strip())
 
             self.commands.append(cmd)
+
+        elif line.startswith("CONFIG:"):
+            cmd = Command('config')
+            sc = line[len('CONFIG:'):].strip()
+            if sc.find('->') > 0:
+                lst = sc.split(';')
+                for lsts in lst:
+                    itm = lsts.strip()
+                    pins = itm.split('->')[0].strip()
+                    direct = itm.split('->')[1].strip()
+                    if direct == 'IN':
+                        cmd.lst0 = str_to_int_list(pins)
+                    elif direct == 'OUT':
+                        cmd.lst1 = str_to_int_list(pins)
+                    else:
+                        print 'ERROR: invalid direction ' + direct
+                        sys.exit(-1)
+            else:
+                print 'ERROR: wrong syntax ' + sc
+                sys.exit(-1)
+
+            self.commands.append(cmd)
+            self.currentInputs = cmd.lst0
+            self.currentOutputs = cmd.lst1
+
         else:
             print 'ERROR: wrong command', line
             sys.exit(-1)
@@ -463,6 +495,25 @@ class Chip:
                 f.write('\tCMD_PULSE_MINUS, ')
                 f.write(str(self.get_dip28_num(cmd.pin)) + ',\n')
                 size += 2
+
+            elif cmd.name == 'config':
+                if self.pins <= 16:
+                    f.write('\tCMD_INIT_16, ')
+                    size += 3
+                elif self.pins <= 24:
+                    f.write('\tCMD_INIT_24, ')
+                    size += 4
+                else:
+                    f.write('\tCMD_INIT_28, ')
+                    size += 5
+                inputs = cmd.lst0
+                for power in self.powerPlus:
+                    inputs.append(power)
+                for power in self.powerMinus:
+                    inputs.append(power)
+                self.inputs = cmd.lst0
+                self.outputs = cmd.lst1
+                f.write(self.get_pins_val(inputs) + '\t// ' + self.get_pins_comment(inputs) + '\n')
 
         f.write('\tCMD_END,\n\n')
         size += 1
