@@ -1349,4 +1349,57 @@ CHIP[14] 'ИП7'
 	TEST: 0101:11 => 0101
 	TEST: 1010:11 => 1010
 	# Z-состояние
+
+CHIP[16] 'HC166'
+	POWER: -8 +16
+	#                                 ~PE,  CP, ~CE, DS, ~MR
+	IN: 2, 3, 4, 5, 10, 11, 12, 14,    15,  7,  6,   1,   9
+	OUT: 13
+
+	# сброс
+	TEST: 11111111:00000 => 0
+	# параллельный ввод
+	TEST: 01010101:00001 => 0
+	PULSE: +7
+	SET: 1 -> 15
+	TEST: 1
+	PULSE: +7
+	TEST: 0
+	PULSE: +7
+	TEST: 1
+	PULSE: +7
+	SET: 1 -> 1
+	TEST: 0	
+	PULSE: +7
+	TEST: 1	
+	PULSE: +7
+	TEST: 0
+	PULSE: +7
+	TEST: 1
+
+	# отключаем прием тактовых импульсов
+	SET: 1 -> 6
+	PULSE: +7
+	TEST: 1
+	PULSE: +7
+	TEST: 1	
+	SET: 0 -> 6
+
+	PULSE: +7
+	TEST: 0	
+	PULSE: +7
+	TEST: 0	
+	PULSE: +7
+	TEST: 0	
+	PULSE: +7
+	TEST: 0	
+
+	PULSE: +7
+	TEST: 1
+	PULSE: +7
+	TEST: 1
+	PULSE: +7
+	TEST: 1
+	PULSE: +7
+	TEST: 1
 	
