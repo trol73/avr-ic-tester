@@ -645,6 +645,11 @@ size += 1
 f.write('};\n')
 f.close()
 
+print '-------------[Chips]--------------------'
+for chip in chips:
+    print chip.name
+print '----------------------------------------'
+
 
 print 'Total chips: ', len(chips)
 print 'Data size: ', size
