@@ -65,8 +65,6 @@ def binary_byte(b):
 
 
 class DataGenerator:
-    commands = []
-    size = 0
 
     def __init__(self):
         self.commands = []
@@ -85,7 +83,10 @@ class DataGenerator:
         :param args:
         :return:
         """
-        self.commands.append(args)
+        cmd = []
+        for a in args:
+            cmd.append(a)
+        self.commands.append(cmd)
         self.size += len(args)
 
     def add_command_mask_1(self, name, mask, pins):

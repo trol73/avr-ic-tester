@@ -7,15 +7,16 @@ __author__ = 'trol'
 
 
 def load_line(chip, line):
+
     if line.startswith('CHIP['):
         pins = line[len('CHIP['):]
         pins = pins[:pins.find(']')]
         chip.pins = int(pins)
         name = line[line.find("'"):]
         if name[0] != "'" or name[len(name) - 1] != "'":
-            print 'ERROR: name expected'
-            sys.exit(-1)
+            error('name expected')
         chip.name = name[1:-1]
+
     elif line.startswith('POWER:'):
         power = line[len('POWER:'):].split(' ')
         for p in power:
@@ -25,6 +26,7 @@ def load_line(chip, line):
                 chip.powerMinus.append(int(p[1:]))
             elif p[0] == '+':
                 chip.powerPlus.append(int(p[1:]))
+
     elif line.startswith('IN:'):
         inputs = line[len('IN:'):].split(',')
         for inp in inputs:
@@ -33,10 +35,10 @@ def load_line(chip, line):
                 continue
             n = int(name)
             if n > chip.pins:
-                print 'ERROR: wrong pin number', n, 'for DIP-'+str(chip.pins)
-                sys.exit(-1)
+                error('wrong pin number ', n, ' for DIP-', chip.pins)
             chip.inputs.append(n)
         chip.currentInputs = chip.inputs
+
     elif line.startswith('OUT:'):
         outputs = line[len('OUT:'):].split(',')
         for out in outputs:
@@ -46,17 +48,28 @@ def load_line(chip, line):
             if name[0] == '@':
                 n = int(name[1:])
                 if n > chip.pins:
-                    print 'ERROR: wrong pin number', n, 'for DIP-'+str(chip.pins)
-                    sys.exit(-1)
+                    error('wrong pin number ', n, ' for DIP-', chip.pins)
                 chip.outputs.append(n)
                 chip.pullUpOutputs.append(n)
             else:
                 n = int(name)
                 if n > chip.pins:
-                    print 'ERROR: wrong pin number', n, 'for DIP-'+str(chip.pins)
-                    sys.exit(-1)
+                    error('wrong pin number ', n, ' for DIP-', chip.pins)
                 chip.outputs.append(n)
         chip.currentOutputs = chip.outputs
+
+    elif line.startswith('VOID:'):
+        voids = line[len('VOID:'):].split(',')
+        for v in voids:
+            name = v.strip()
+            if len(name) == 0:
+                continue
+            n = int(name)
+            if n > chip.pins:
+                error('wrong pin number ', n, ' for DIP-', chip.pins)
+                sys.exit(-1)
+            chip.void.append(n)
+
     elif line.startswith('SET:'):
         cmd = Command('set')
         sc = line[len('SET:'):].strip()
@@ -71,8 +84,7 @@ def load_line(chip, line):
                 elif level == '1':
                     cmd.lst1 = str_to_int_list(pins)
                 else:
-                    print 'ERROR: invalid level ' + level
-                    sys.exit(-1)
+                    error('invalid level ', level)
         else:
             sc = sc.replace(':', '')
             if len(sc) == len(chip.currentInputs):
@@ -85,14 +97,12 @@ def load_line(chip, line):
                     elif sc[index] == '0':
                         list0 = list0 + str(inp) + ','
                     else:
-                        print 'ERROR: wrong level', sc[index]
-                        sys.exit(-1)
+                        error('wrong level ', sc[index])
                     index += 1
                 cmd.lst0 = str_to_int_list(list0)
                 cmd.lst1 = str_to_int_list(list1)
             else:
-                print 'ERROR: SET syntax error'
-                sys.exit(-1)
+                error('SET syntax error')
 
         chip.commands.append(cmd)
 
@@ -110,8 +120,7 @@ def load_line(chip, line):
                 elif level == '1':
                     cmd.lst1 = str_to_int_list(pins)
                 else:
-                    print 'ERROR: invalid level ' + level
-                    sys.exit(-1)
+                    error('invalid level ', level)
         elif sc.find('=>') > 0:
             cmd.name = 'set+test'
             # команда вида TEST: xxxx => yyyyyyyy
@@ -119,11 +128,9 @@ def load_line(chip, line):
             from_val = args[0].strip().replace(':', '')
             to_val = args[1].strip().replace(':', '')
             if len(from_val) != len(chip.currentInputs):
-                print 'ERROR: TEST syntax error:', from_val
-                sys.exit(-1)
+                error('TEST syntax error - ', from_val)
             if len(to_val) != len(chip.currentOutputs):
-                print 'ERROR: TEST syntax error:', to_val
-                sys.exit(-1)
+                error('TEST syntax error -', to_val)
 
             index = 0
             list1 = ''
@@ -134,8 +141,7 @@ def load_line(chip, line):
                 elif from_val[index] == '0':
                     list0 = list0 + str(inp) + ','
                 else:
-                    print 'ERROR: wrong level', from_val[index]
-                    sys.exit(-1)
+                    error('wrong level -', from_val[index])
                 index += 1
             cmd.lst0 = str_to_int_list(list0)
             cmd.lst1 = str_to_int_list(list1)
@@ -149,8 +155,7 @@ def load_line(chip, line):
                 elif to_val[index] == '0':
                     list0 = list0 + str(out) + ','
                 else:
-                    print 'ERROR: wrong level', to_val[index]
-                    sys.exit(-1)
+                    error('wrong level - ', to_val[index])
                 index += 1
             cmd.lst0_2 = str_to_int_list(list0)
             cmd.lst1_2 = str_to_int_list(list1)
@@ -167,16 +172,15 @@ def load_line(chip, line):
                     elif sc[index] == '0':
                         list0 = list0 + str(out) + ','
                     else:
-                        print 'ERROR: wrong level', sc[index]
-                        sys.exit(-1)
+                        error('wrong level - ', sc[index])
                     index += 1
                 cmd.lst0 = str_to_int_list(list0)
                 cmd.lst1 = str_to_int_list(list1)
             else:
-                print 'ERROR: TEST syntax error'
-                sys.exit(-1)
+                error('TEST syntax error')
 
         chip.commands.append(cmd)
+
     elif line.startswith('PULSE:'):
         sc = line[len('PULSE:'):].strip()
         if sc[0] == '+':
@@ -184,8 +188,8 @@ def load_line(chip, line):
         elif sc[0] == '-':
             cmd = Command('pulse-')
         else:
-            print 'ERROR: wrong argument - ', sc
-            sys.exit(-1)
+            error('wrong argument - ', sc)
+            return
 
         cmd.pin = int(sc[1:].strip())
 
@@ -205,18 +209,16 @@ def load_line(chip, line):
                 elif direct == 'OUT':
                     cmd.lst1 = str_to_int_list(pins)
                 else:
-                    print 'ERROR: invalid direction ' + direct
-                    sys.exit(-1)
+                    error('invalid direction ', direct)
         else:
-            print 'ERROR: wrong syntax ' + sc
-            sys.exit(-1)
+            error('wrong syntax - ', sc)
 
         chip.commands.append(cmd)
         chip.currentInputs = cmd.lst0
         chip.currentOutputs = cmd.lst1
 
     else:
-        print 'ERROR: wrong command', line
+        error('wrong command - ', line)
         sys.exit(-1)
 
 
@@ -238,3 +240,17 @@ def str_to_int_list(arg):
             print 'ERROR: wrong numbers list: ', arg
             sys.exit(-1)
     return result
+
+
+def error(msg, *args):
+    """
+        Выводит сообщение об ошибке и завершает работу
+    :param msg:
+    :param args:
+    :return:
+    """
+    s = 'ERROR: ' + msg
+    for a in args:
+        s += str(a)
+    print s
+    sys.exit(-1)
