@@ -137,6 +137,30 @@ void TesterSet28(val28_t *mask0, val28_t *mask1) {
 	write_registers(PORT);
 }
 
+void TesterSetAll16(val16_t *mask) {
+	regs_t regs;
+
+	read_registers(PORT);
+	val16toRegs(mask, &regs, OPERATION_COPY);
+	write_registers(PORT);	
+}
+
+void TesterSetAll24(val24_t *mask) {
+	regs_t regs;
+
+	read_registers(PORT);
+	val24toRegs(mask, &regs, OPERATION_COPY);
+	write_registers(PORT);	
+}
+
+void TesterSetAll28(val28_t *mask) {
+	regs_t regs;
+
+	read_registers(PORT);
+	val28toRegs(mask, &regs, OPERATION_COPY);
+	write_registers(PORT);	
+}
+
 
 
 
@@ -199,6 +223,59 @@ bool TesterTest28(val28_t *mask0, val28_t *mask1) {
 		}
 	}
 	return true;
+}
+
+bool TesterTestAll16(val16_t *mask) {
+	regs_t regs;
+	val16_t val;
+	
+	read_registers_16(PIN);
+	regsToVal16(&regs, &val);
+	
+	for (uint8_t pin = 1; pin <= 16; pin++) {
+		if (getPinVal16(&val, pin) != getPinVal16(mask, pin)) {
+			MSG_DEC("fail ", pin);
+			MSG_DEC("found: ", getPinVal16(&val, pin));
+			MSG_DEC("expected: ", getPinVal16(mask, pin));
+			TesterDebugStatus(16);
+			return false;			
+		}
+	}
+	return true;	
+}
+
+bool TesterTestAll24(val24_t *mask) {
+	regs_t regs;
+	val24_t val;
+	
+	read_registers(PIN);
+	regsToVal24(&regs, &val);
+	
+	for (uint8_t pin = 1; pin <= 24; pin++) {
+		if (getPinVal24(&val, pin) != getPinVal24(mask, pin)) {
+			MSG_DEC("fail ", pin);
+			TesterDebugStatus(24);
+			return false;
+		}
+	}
+	return true;	
+}
+
+bool TesterTestAll28(val28_t *mask) {
+	regs_t regs;
+	val28_t val;
+	
+	read_registers(PIN);
+	regsToVal28(&regs, &val);
+	
+	for (uint8_t pin = 1; pin <= 28; pin++) {
+		if (getPinVal28(&val, pin) != getPinVal28(mask, pin)) {
+			MSG_DEC("fail ", pin);
+			TesterDebugStatus(28);
+			return false;
+		}
+	}
+	return true;	
 }
 
 

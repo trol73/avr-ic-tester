@@ -135,6 +135,9 @@ void TesterSet16(val16_t *mask0, val16_t *mask1);
 void TesterSet24(val24_t *mask0, val24_t *mask1);
 void TesterSet28(val28_t *mask0, val28_t *mask1);
 
+void TesterSetAll16(val16_t *mask);
+void TesterSetAll24(val24_t *mask);
+void TesterSetAll28(val28_t *mask);
 /************************************************************************
   Проверяет, что биты маски mask1 установлены, а биты маски mask0 сброшены
 ************************************************************************/
@@ -142,6 +145,10 @@ bool TesterTest16(val16_t *mask0, val16_t *mask1);
 bool TesterTest24(val24_t *mask0, val24_t *mask1);
 bool TesterTest28(val28_t *mask0, val28_t *mask1);
 
+
+bool TesterTestAll16(val16_t *mask);
+bool TesterTestAll24(val24_t *mask);
+bool TesterTestAll28(val28_t *mask);
 
 /************************************************************************
   Возвращает true, если все пины сейчас задействованы для теста микросхемы

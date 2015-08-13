@@ -27,6 +27,21 @@
 #define CMD_TEST_28			10	// (mask0[4], mask1[3]) проверяет, что на выводах установлен ожидаемый уровень
 #define CMD_PULSE_PLUS		11	// (pin[1]) подает положительный импульс (0 -> 1) на вывод
 #define CMD_PULSE_MINUS		12	// (pin[1]) подает отрицательный импульс (1 -> 0) на вывод
+#define CMD_SET_ALL_16		13	// (mask[2] устанавливает все пины по маске)
+#define CMD_SET_ALL_24		14	// (mask[3] устанавливает все пины по маске)
+#define CMD_SET_ALL_28		15	// (mask[4] устанавливает все пины по маске)
+#define CMD_TEST_ALL_16		16	// (mask[2] проверяет уровни на всех пинах МС по маске)
+#define CMD_TEST_ALL_24		17	// (mask[3] проверяет уровни на всех пинах МС по маске)
+#define CMD_TEST_ALL_28		18	// (mask[4] проверяет уровни на всех пинах МС по маске)
+#define CMD_SET_ALL_AND_TEST_16		19	// (mask_set[2], mask_test[2]) устанавливает и проверяет все пины
+#define CMD_SET_ALL_AND_TEST_24		20	// (mask_set[3], mask_test[3]) устанавливает и проверяет все пины
+#define CMD_SET_ALL_AND_TEST_28		21	// (mask_set[4], mask_test[4]) устанавливает и проверяет все пины
+#define CMD_LAST_PULSE		22	// повторяет последний импульс
+#define CMD_LAST_PULSE_AND_TEST_16	23	// (mask[2]) повторяет последний импульс и проверяет состояние всех пинов
+#define CMD_LAST_PULSE_AND_TEST_24	24	// (mask[3]) повторяет последний импульс и проверяет состояние всех пинов
+#define CMD_LAST_PULSE_AND_TEST_28	25	// (mask[2]) повторяет последний импульс и проверяет состояние всех пинов
+
+
 
 #define CMD_PRINT_14		200
 

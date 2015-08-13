@@ -3,16 +3,16 @@
 import sys
 from analyser import Analyser
 from generator import DataGenerator, convert_pin
-import parser
+from ic_parser import load_line
 
 from classes import Chip
 
 
-OPTIMIZE_CMD_ALL = True             # использовать CMD_SET_ALL вместо CMD_SET
-OPTIMIZE_CMD_TEST = True            # использовать CMD_TEST_ALL вместо CMD_TEST везде, где это возможно
-OPTIMIZE_LAST_PULSE = True          # использовать команду CMD_LAST_PULSE везде, где это возможно
-OPTIMIZE_SET_AND_TEST = True        # использовать команду CMD_SET_AND_TEST вместо сочетания CMD_SET_ALL + CMD_TEST
-OPTIMIZE_LAST_PULSE_AND_TEST = True # использовать команду CMD_LAST_PULSE_AND_TEST вместо сочетания CMD_LAST_PULSE + CMD_TEST
+OPTIMIZE_CMD_ALL = False             # использовать CMD_SET_ALL вместо CMD_SET
+OPTIMIZE_CMD_TEST = False            # использовать CMD_TEST_ALL вместо CMD_TEST везде, где это возможно
+OPTIMIZE_LAST_PULSE = False          # использовать команду CMD_LAST_PULSE везде, где это возможно
+OPTIMIZE_SET_AND_TEST = False        # использовать команду CMD_SET_AND_TEST вместо сочетания CMD_SET_ALL + CMD_TEST
+OPTIMIZE_LAST_PULSE_AND_TEST = False # использовать команду CMD_LAST_PULSE_AND_TEST вместо сочетания CMD_LAST_PULSE + CMD_TEST
 
 __author__ = 'trol'
 
@@ -44,10 +44,10 @@ for s in f:
 
     if s.startswith('CHIP['):
         chip = Chip()
-        parser.load_line(chip, s)
+        load_line(chip, s)
         chips.append(chip)
     else:
-        parser.load_line(chips[len(chips) - 1], s)
+        load_line(chips[len(chips) - 1], s)
 
 f.close()
 
