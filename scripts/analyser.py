@@ -93,7 +93,6 @@ class Analyser:
             elif self.levels[pin] != 0:
                 print 'ERROR: pin value undefined', (pin+1), self.levels
                 sys.exit(1)
-        # на все неиспользуемые выводы надо подать 1
 
         return result
 

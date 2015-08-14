@@ -20,12 +20,13 @@ def list_to_mask(mask, pins):
     return res
 
 
-def convert_bitmask(mask, from_pins, to_pins):
+def convert_bitmask(mask, from_pins, to_pins, set_unused_bits_to=0):
     """
         Преобразует битовую маску
     :param mask:
     :param from_pins:
     :param to_pins:
+    :param set_unused_bits_to: каким значением инициализировать неиспользуемые биты (например, если МС DIP-14 вставляется в панель DIP-16
     :return:
     """
     result = 0
@@ -35,6 +36,12 @@ def convert_bitmask(mask, from_pins, to_pins):
             out_pin += to_pins - from_pins
         if mask & (1 << src_pin):
             result |= (1 << out_pin)
+    # если неиспользуемые пины надо установить в 1
+    if set_unused_bits_to == 1:
+        for pin in range(from_pins/2, to_pins/2):
+            result |= 1 << pin
+            result |= 1 << (pin + (to_pins - from_pins)/2)
+
     return result
 
 
@@ -89,29 +96,30 @@ class DataGenerator:
         self.commands.append(cmd)
         self.size += len(args)
 
-    def add_command_mask_1(self, name, mask, pins):
+    def add_command_mask_1(self, name, mask, pins, set_unused_bits_to=0):
         """
             Добавляет команду с аргументом-маской
 
         :param name: название команды без суффикса размера (к немму будет добавлено _16, _24 или _28) в зависимости от числа пинов МС
         :param mask: значение маски, число либо массив с номерами установленных битов
         :param pins: количество пинов у МС
+        :param set_unused_bits_to: каким значением инициализировать неиспользуемые биты (например, если МС DIP-14 вставляется в панель DIP-16)
         :return:
         """
         if isinstance(mask, (list, tuple)):
             mask = list_to_mask(mask, pins)
         if pins <= 16:
-            mask = convert_bitmask(mask, pins, 16)
+            mask = convert_bitmask(mask, pins, 16, set_unused_bits_to)
             self.add_command(name + '_16', binary_byte(mask & 0xff), binary_byte((mask >> 8) & 0xff))
         elif pins <= 24:
-            mask = convert_bitmask(mask, pins, 24)
+            mask = convert_bitmask(mask, pins, 24, set_unused_bits_to)
             self.add_command(name + '_24', binary_byte(mask & 0xff), binary_byte((mask >> 8) & 0xff), binary_byte((mask >> 16) & 0xff))
         else:
-            mask = convert_bitmask(mask, pins, 28)
+            mask = convert_bitmask(mask, pins, 28, set_unused_bits_to)
             self.add_command(name + '_28', binary_byte(mask & 0xff), binary_byte((mask >> 8) & 0xff), binary_byte((mask >> 16) & 0xff),
                              binary_byte((mask >> 24) & 0xff))
 
-    def add_command_mask_2(self, name, mask1, mask2, pins):
+    def add_command_mask_2(self, name, mask1, mask2, pins, set_unused_bits_to=0):
         """
             Добавляет команду с двумя аргументами-масками
 
@@ -119,6 +127,7 @@ class DataGenerator:
         :param mask1: значение маски первого аргумента, число либо массив с номерами установленных битов
         :param mask2: значение маски второго аргумента, число либо массив с номерами установленных битов
         :param pins: количество пинов у МС
+        :param set_unused_bits_to: каким значением инициализировать неиспользуемые биты (например, если МС DIP-14 вставляется в панель DIP-16)
         :return:
         """
         if isinstance(mask1, (list, tuple)):
@@ -127,18 +136,18 @@ class DataGenerator:
             mask2 = list_to_mask(mask2, pins)
 
         if pins <= 16:
-            mask1 = convert_bitmask(mask1, pins, 16)
-            mask2 = convert_bitmask(mask2, pins, 16)
+            mask1 = convert_bitmask(mask1, pins, 16, set_unused_bits_to)
+            mask2 = convert_bitmask(mask2, pins, 16, set_unused_bits_to)
             self.add_command(name + '_16', binary_byte(mask1 & 0xff), binary_byte((mask1 >> 8) & 0xff),
                              binary_byte(mask2 & 0xff), binary_byte((mask2 >> 8) & 0xff))
         elif pins <= 24:
-            mask1 = convert_bitmask(mask1, pins, 24)
-            mask2 = convert_bitmask(mask2, pins, 24)
+            mask1 = convert_bitmask(mask1, pins, 24, set_unused_bits_to)
+            mask2 = convert_bitmask(mask2, pins, 24, set_unused_bits_to)
             self.add_command(name + '_24', binary_byte(mask1 & 0xff), binary_byte((mask1 >> 8) & 0xff), binary_byte((mask1 >> 16) & 0xff),
                              binary_byte(mask2 & 0xff), binary_byte((mask2 >> 8) & 0xff), binary_byte((mask2 >> 16) & 0xff))
         else:
-            mask1 = convert_bitmask(mask1, pins, 28)
-            mask2 = convert_bitmask(mask2, pins, 28)
+            mask1 = convert_bitmask(mask1, pins, 28, set_unused_bits_to)
+            mask2 = convert_bitmask(mask2, pins, 28, set_unused_bits_to)
             self.add_command(name + '_28', binary_byte(mask1 & 0xff), binary_byte((mask1 >> 8) & 0xff), binary_byte((mask1 >> 16) & 0xff),
                              binary_byte((mask1 >> 24) & 0xff), binary_byte(mask2 & 0xff), binary_byte((mask2 >> 8) & 0xff),
                              binary_byte((mask2 >> 16) & 0xff), binary_byte((mask2 >> 24) & 0xff))

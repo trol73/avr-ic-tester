@@ -8,7 +8,7 @@ from ic_parser import load_line
 from classes import Chip
 
 
-OPTIMIZE_CMD_ALL = False             # использовать CMD_SET_ALL вместо CMD_SET
+OPTIMIZE_CMD_ALL = True             # использовать CMD_SET_ALL вместо CMD_SET
 OPTIMIZE_CMD_TEST = False            # использовать CMD_TEST_ALL вместо CMD_TEST везде, где это возможно
 OPTIMIZE_LAST_PULSE = False          # использовать команду CMD_LAST_PULSE везде, где это возможно
 OPTIMIZE_SET_AND_TEST = False        # использовать команду CMD_SET_AND_TEST вместо сочетания CMD_SET_ALL + CMD_TEST
@@ -86,7 +86,7 @@ def compile_chip(chip, g):
             analyser.set_pins_to_0(pins0)
             analyser.set_pins_to_1(pins1)
             if OPTIMIZE_CMD_ALL:
-                g.add_command_mask_1('CMD_SET_ALL', analyser.get_levels_mask(), chip.pins)
+                g.add_command_mask_1('CMD_SET_ALL', analyser.get_levels_mask(), chip.pins, 1)
             else:
                 g.add_command_mask_2('CMD_SET', pins0, pins1, chip.pins)
 
@@ -99,7 +99,7 @@ def compile_chip(chip, g):
             if optimized_mask is None:
                 g.add_command_mask_2('CMD_TEST', cmd.lst0, cmd.lst1, chip.pins)
             else:
-                g.add_command_mask_1('CMD_TEST_ALL', optimized_mask, chip.pins)
+                g.add_command_mask_1('CMD_TEST_ALL', optimized_mask, chip.pins, 1)
 
         elif cmd.name == 'set+test':
             pins0 = cmd.lst0
@@ -112,12 +112,13 @@ def compile_chip(chip, g):
             for pullUp in chip.pullUpOutputs:
                 pins1.append(pullUp)
 
-            if OPTIMIZE_CMD_ALL:
-                g.add_command_mask_1('CMD_SET_ALL', analyser.get_levels_mask(), chip.pins)
-            else:
-                g.add_command_mask_2('CMD_SET', pins0, pins1, chip.pins)
             analyser.set_pins_to_0(pins0)
             analyser.set_pins_to_1(pins1)
+
+            if OPTIMIZE_CMD_ALL:
+                g.add_command_mask_1('CMD_SET_ALL', analyser.get_levels_mask(), chip.pins, 1)
+            else:
+                g.add_command_mask_2('CMD_SET', pins0, pins1, chip.pins)
 
             if OPTIMIZE_CMD_TEST:
                 optimized_mask = analyser.get_test_all_mask(cmd.lst0_2, cmd.lst1_2)
@@ -127,7 +128,7 @@ def compile_chip(chip, g):
             if optimized_mask is None:
                 g.add_command_mask_2('CMD_TEST', cmd.lst0_2, cmd.lst1_2, chip.pins)
             else:
-                g.add_command_mask_1('CMD_TEST_ALL', optimized_mask, chip.pins)
+                g.add_command_mask_1('CMD_TEST_ALL', optimized_mask, chip.pins, 1)
 
         elif cmd.name == 'pulse+':
             if analyser.pulse(cmd.pin, '+'):
