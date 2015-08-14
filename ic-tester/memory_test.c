@@ -338,58 +338,14 @@ void MemTest() {
 		}
 		MemRegenerate();
 	}
+#if DEBUG
 	MemDebug();
+#endif
 	MSG("test done");
 }
 
-
+#if DEBUG
 void MemDebug() {
-/*	
-	MemWriteBit(0, 0, 1);
-	MemWriteBit(0, 0, 1);
-	MemWriteBit(0, 0, 1);
-	_delay_us(10);
-	uint8_t r1, r2, r3;
-	r1 = MemReadBit(0, 0);
-	r2 = MemReadBit(0, 0);
-	r3 = MemReadBit(0, 0);
-	MSG_DEC("TST 1 ", r1);
-	MSG_DEC("TST 1 ", r2);
-	MSG_DEC("TST 1 ", r3);
-	MemWriteBit(0, 0, 0);
-	MemWriteBit(0, 0, 0);
-	MemWriteBit(0, 0, 0);
-	_delay_us(10);
-	r1 = MemReadBit(0, 0);
-	r2 = MemReadBit(0, 0);
-	r3 = MemReadBit(0, 0);
-	MSG_DEC("TST 0 ", r1);	
-	MSG_DEC("TST 0 ", r2);	
-	MSG_DEC("TST 0 ", r3);	
-	MemWriteBit(5, 5, 1);
-	MemWriteBit(5, 5, 1);
-	MemWriteBit(5, 5, 1);
-	_delay_us(10);
-	r1 = MemReadBit(5, 5);
-	r2 = MemReadBit(5, 5);
-	r3 = MemReadBit(5, 5);
-	MSG_DEC("TST 1 ", r1);
-	MSG_DEC("TST 1 ", r2);
-	MSG_DEC("TST 1 ", r3);
-	MemWriteBit(5, 5, 0);
-	MemWriteBit(5, 5, 0);
-	MemWriteBit(5, 5, 0);
-	_delay_us(10);
-	r1 = MemReadBit(5, 5);
-	r2 = MemReadBit(5, 5);
-	r3 = MemReadBit(5, 5);
-	MSG_DEC("TST 0 ", r1);	
-	MSG_DEC("TST 0 ", r2);	
-	MSG_DEC("TST 0 ", r3);	
-	
-	return;
-*/	
-
 	for (uint16_t row = 0; row < 8; row++) {
 		for (uint16_t col = 0; col < 8; col++) {
 #ifdef MEGA32 
@@ -441,7 +397,7 @@ void MemDebug() {
 	uart_putc('\n');	
 	
 }
-
+#endif
 
 
 uint8_t MemTestGetCell(uint8_t row, uint8_t col) {

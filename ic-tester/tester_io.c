@@ -521,6 +521,7 @@ void TesterSetPin(uint8_t pin, bool level) {
 
 
 void TesterDebugStatus(uint8_t pins) {
+#if DEBUG	
 	regs_t regs;
 	regs_t regsDdr, regsPort, regsPin;
 	read_registers(DDR);
@@ -545,6 +546,7 @@ void TesterDebugStatus(uint8_t pins) {
 		uart_putdw_dec(pin); uart_putc(':'); uart_putc(' '); uart_putc(getPinVal28(&valDdr, pin+delta) ? '1' : '0'); uart_putc(getPinVal28(&valPort, pin+delta) ? '1' : '0'); uart_putc(getPinVal28(&valPin, pin+delta) ? '1' : '0'); 
 		uart_putc('\n');
 	}
+#endif	
 }
 
 void invertPinDirection(uint8_t pin, uint8_t package) {

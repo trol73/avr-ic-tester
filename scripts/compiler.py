@@ -9,10 +9,10 @@ from classes import Chip
 
 
 OPTIMIZE_CMD_ALL = True             # использовать CMD_SET_ALL вместо CMD_SET
-OPTIMIZE_CMD_TEST = False            # использовать CMD_TEST_ALL вместо CMD_TEST везде, где это возможно
-OPTIMIZE_LAST_PULSE = False          # использовать команду CMD_LAST_PULSE везде, где это возможно
-OPTIMIZE_SET_AND_TEST = False        # использовать команду CMD_SET_AND_TEST вместо сочетания CMD_SET_ALL + CMD_TEST
-OPTIMIZE_LAST_PULSE_AND_TEST = False # использовать команду CMD_LAST_PULSE_AND_TEST вместо сочетания CMD_LAST_PULSE + CMD_TEST
+OPTIMIZE_CMD_TEST = True            # использовать CMD_TEST_ALL вместо CMD_TEST везде, где это возможно
+OPTIMIZE_LAST_PULSE = True          # использовать команду CMD_LAST_PULSE везде, где это возможно
+OPTIMIZE_SET_AND_TEST = True        # использовать команду CMD_SET_AND_TEST вместо сочетания CMD_SET_ALL + CMD_TEST
+OPTIMIZE_LAST_PULSE_AND_TEST = True # использовать команду CMD_LAST_PULSE_AND_TEST вместо сочетания CMD_LAST_PULSE + CMD_TEST
 
 __author__ = 'trol'
 
@@ -61,7 +61,7 @@ def compile_chip(chip, g):
     analyser = Analyser(chip.pins, chip.name)
     g.add_chip(chip.name)
     first_command_index = len(g.commands) - 1
-    g.add_command('CMD_RESET_FULL')
+    #g.add_command('CMD_RESET_FULL')
     inputs = chip.inputs
     for power in chip.powerPlus:
         inputs.append(power)
@@ -131,13 +131,13 @@ def compile_chip(chip, g):
                 g.add_command_mask_1('CMD_TEST_ALL', optimized_mask, chip.pins, 1)
 
         elif cmd.name == 'pulse+':
-            if analyser.pulse(cmd.pin, '+'):
+            if OPTIMIZE_LAST_PULSE and analyser.pulse(cmd.pin, '+'):
                 g.add_command('CMD_LAST_PULSE')
             else:
                 g.add_command('CMD_PULSE_PLUS', convert_pin(cmd.pin, chip.pins, 28))
 
         elif cmd.name == 'pulse-':
-            if analyser.pulse(cmd.pin, '-'):
+            if OPTIMIZE_LAST_PULSE and analyser.pulse(cmd.pin, '-'):
                 g.add_command('CMD_LAST_PULSE')
             else:
                 g.add_command('CMD_PULSE_MINUS', convert_pin(cmd.pin, chip.pins, 28))

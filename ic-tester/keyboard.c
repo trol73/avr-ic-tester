@@ -9,8 +9,8 @@
 
 #include "tester_io.h"
 
-#define KEY_PRESS_TIME		10
-#define KEY_REPEAT_TIME		50
+#define KEY_PRESS_TIME		100
+#define KEY_REPEAT_TIME		250
 
 
 uint8_t keyRepeatCount[3];

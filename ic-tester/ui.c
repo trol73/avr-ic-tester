@@ -179,7 +179,6 @@ static void drawCustomTest() {
 }
 
 static void drawMemoryTestResult() {
-	MSG("draw results");
 	const uint8_t step = 6;	// шаг сетки
 	// сетка 8x8 €чеек размером 5x5
 	for (uint8_t i = 0; i <= 8; i++) {
@@ -187,26 +186,27 @@ static void drawMemoryTestResult() {
 		glcd_draw_line(0, i*step-1, 8*step, i*step-1, 1);
 	}
 
-	for (uint8_t row = 0; row < 8; row++) {
-		for (uint8_t col = 0; col < 8; col++) {
-			uint8_t res = MemTestGetCell(row, col);
-			switch (res) {
-				case TEST_CELL_GOOD:
-					glcd_fill_rect(col*step + 2, row*step + 1, 3, 3, 1);
-					break;
-				case TEST_CELL_BAD:
-					glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+3, 1);
-					glcd_draw_line(col*step+2, row*step+3, col*step+4, row*step+1, 1);
-					break;
-				case TEST_CELL_UNKNOWN:
-					glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+1, 1);
-					glcd_draw_line(col*step+2, row*step+2, col*step+3, row*step+2, 1);
-					glcd_draw_line(col*step+2, row*step+3, col*step+2, row*step+3, 1);
-					break;
+	if (MemGetRows() >= 8) {
+		for (uint8_t row = 0; row < 8; row++) {
+			for (uint8_t col = 0; col < 8; col++) {
+				uint8_t res = MemTestGetCell(row, col);
+				switch (res) {
+					case TEST_CELL_GOOD:
+						glcd_fill_rect(col*step + 2, row*step + 1, 3, 3, 1);
+						break;
+					case TEST_CELL_BAD:
+						glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+3, 1);
+						glcd_draw_line(col*step+2, row*step+3, col*step+4, row*step+1, 1);
+						break;
+					case TEST_CELL_UNKNOWN:
+						glcd_draw_line(col*step+2, row*step+1, col*step+4, row*step+1, 1);
+						glcd_draw_line(col*step+2, row*step+2, col*step+3, row*step+2, 1);
+						glcd_draw_line(col*step+2, row*step+3, col*step+2, row*step+3, 1);
+						break;
+				}
 			}
 		}
 	}
-	
 	glcd_draw_string_xy_P(55, 0, STR_CHIP);
 	if (MemGetRows() == 8) {
 		glcd_draw_string_xy_P(58, LINES_DY, STR_RU5);
@@ -235,8 +235,10 @@ static void drawMemoryTest() {
 }
 
 static void drawAboutScreen() {
-	glcd_draw_string_xy_P(0, 0, STR_APPNAME);
-	glcd_draw_string_xy_P(0, 10, STR_VERSION);
+	glcd_drawCenteredStr_p(STR_APPNAME, 0, 1);
+	glcd_drawCenteredStr_p(STR_VERSION, 10, 1);
+	glcd_drawCenteredStr_p(STR_COPYRIGHT_DATE, 25, 1);
+	glcd_drawCenteredStr_p(STR_COPYRIGHT_NAME, 35, 1);
 }
 
 void Draw() {
@@ -485,6 +487,10 @@ static void glcd_drawCenteredStr(const char *str, uint8_t y, uint8_t dx) {
 			return;
 		}
 		x += glcd_draw_char_xy(x, y, c) + dx;
+		if (x > GLCD_LCD_WIDTH - 6) {
+			x = 0;
+			y += 10;
+		}
 		c++;
 	}
 }

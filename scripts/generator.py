@@ -36,7 +36,7 @@ def convert_bitmask(mask, from_pins, to_pins, set_unused_bits_to=0):
             out_pin += to_pins - from_pins
         if mask & (1 << src_pin):
             result |= (1 << out_pin)
-    # если неиспользуемые пины надо установить в 1
+    # если неиспользуемые пины надо установить
     if set_unused_bits_to == 1:
         for pin in range(from_pins/2, to_pins/2):
             result |= 1 << pin
