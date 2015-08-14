@@ -24,6 +24,13 @@ class Analyser:
         for i in range(self.pins):
             self.levels.append(0)
             self.ddr.append('i')
+        # сколько выводов будет задействовано для команд
+        if chip_pins <= 16:
+            self.socket_pins = 16
+        elif chip_pins <= 24:
+            self.socket_pins = 24
+        else:
+            self.socket_pins = 28
         self._lastWarning = None
 
     def set_pins_to_0(self, mask):
@@ -86,6 +93,8 @@ class Analyser:
             elif self.levels[pin] != 0:
                 print 'ERROR: pin value undefined', (pin+1), self.levels
                 sys.exit(1)
+        # на все неиспользуемые выводы надо подать 1
+
         return result
 
     def get_test_all_mask(self, test0mask, test1mask):
