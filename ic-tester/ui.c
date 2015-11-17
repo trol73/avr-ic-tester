@@ -451,7 +451,11 @@ void onKeyPressed(uint8_t key) {
 
 void InitDisplay() {
 	glcd_init();
+#ifdef DISPLAY_CONTRAST
+	glcd_set_contrast(DISPLAY_CONTRAST);
+#else
 	glcd_set_contrast(100);
+#endif
 	glcd_clear();
 	glcd_clear();
 	//	glcd_tiny_set_font(Font5x7, 5, 7, 32, 0xff);
