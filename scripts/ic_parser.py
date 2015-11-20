@@ -217,6 +217,50 @@ def load_line(chip, line):
         chip.currentInputs = cmd.lst0
         chip.currentOutputs = cmd.lst1
 
+    elif line.startswith("TEST-Z"):
+        cmd = Command('test-z')
+
+        sc = line[len('TEST-Z:'):].strip()
+        sc = sc.replace(':', '')
+        if len(sc) == len(chip.currentOutputs):
+            index = 0
+            listm = ''
+            for inp in chip.currentOutputs:
+                if sc[index] == '1':
+                    listm = listm + str(inp) + ','
+                elif sc[index] == '0':
+                    pass
+                else:
+                    error('wrong mask ', sc[index])
+                index += 1
+                cmd.lst1 = str_to_int_list(listm)
+        else:
+            error('TEST-Z syntax error')
+
+        chip.commands.append(cmd)
+
+    elif line.startswith("TEST-OC"):
+        cmd = Command('test-oc')
+
+        sc = line[len('TEST-OC:'):].strip()
+        sc = sc.replace(':', '')
+        if len(sc) == len(chip.currentOutputs):
+            index = 0
+            listm = ''
+            for inp in chip.currentOutputs:
+                if sc[index] == '1':
+                    listm = listm + str(inp) + ','
+                elif sc[index] == '0':
+                    pass
+                else:
+                    error('wrong mask ', sc[index])
+                index += 1
+                cmd.lst1 = str_to_int_list(listm)
+        else:
+            error('TEST-OC syntax error')
+
+        chip.commands.append(cmd)
+
     else:
         error('wrong command - ', line)
         sys.exit(-1)

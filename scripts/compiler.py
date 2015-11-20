@@ -153,6 +153,14 @@ def compile_chip(chip, g):
             g.add_command_mask_1('CMD_INIT', inputs, chip.pins)
             analyser.set_ddr(inputs)
 
+        elif cmd.name == 'test-z':
+            pins = cmd.lst1
+            g.add_command_mask_1('CMD_TEST_Z', pins, chip.pins)
+
+        elif cmd.name == 'test-oc':
+            pins = cmd.lst1
+            g.add_command_mask_1('CMD_TEST_OC', pins, chip.pins)
+
     g.add_command('CMD_END')
     # проходимся по всем команам этой МС и выполняем оптимизации
 
@@ -172,16 +180,16 @@ def compile_chip(chip, g):
             #print cmd_name, cmd_next_name
             if OPTIMIZE_SET_AND_TEST and cmd_name.startswith('CMD_SET_ALL_') and cmd_next_name.startswith('CMD_TEST_ALL_'):
                 optimized = True
-                print g.commands[i]
+                #print g.commands[i]
                 g.commands[i][0] = 'CMD_SET_ALL_AND_TEST_' + cmd_next_name[len('CMD_TEST_ALL_'):]
                 for j in range(1, len(cmd_next)):
                     g.commands[i].append(cmd_next[j])
-                print g.commands[i]
+                #print g.commands[i]
                 del g.commands[i+1]
                 break
             if OPTIMIZE_LAST_PULSE_AND_TEST and cmd_name == 'CMD_LAST_PULSE' and cmd_next_name.startswith('CMD_TEST_ALL_'):
                 g.commands[i+1][0] = 'CMD_LAST_PULSE_AND_TEST_' + cmd_next_name[len('CMD_TEST_ALL_'):]
-                print g.commands[i+1]
+                #print g.commands[i+1]
                 del g.commands[i]
                 optimized = True
                 break
