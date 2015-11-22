@@ -237,8 +237,9 @@ static void drawMemoryTest() {
 static void drawAboutScreen() {
 	glcd_drawCenteredStr_p(STR_APPNAME, 0, 1);
 	glcd_drawCenteredStr_p(STR_VERSION, 10, 1);
-	glcd_drawCenteredStr_p(STR_COPYRIGHT_DATE, 25, 1);
-	glcd_drawCenteredStr_p(STR_COPYRIGHT_NAME, 35, 1);
+	glcd_drawCenteredStr_p(STR_COPYRIGHT_DATE, 20, 1);
+	glcd_drawCenteredStr_p(STR_COPYRIGHT_NAME, 30, 1);
+	glcd_drawCenteredStr_p(STR_COPYRIGHT_NAME_2, 40, 1);
 }
 
 void Draw() {

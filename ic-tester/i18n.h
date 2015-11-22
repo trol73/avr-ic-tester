@@ -41,6 +41,8 @@ DEFSTR(STR_DIP_20, "DIP-20");
 
 DEFSTR(STR_COPYRIGHT_DATE, "(c) 2015");
 DEFSTR(STR_COPYRIGHT_NAME, "Oleg Trifonov");
+DEFSTR(STR_COPYRIGHT_NAME_2, "Sergey Bagan");
+//                          
 
 
 #endif /* I18N_H_ */

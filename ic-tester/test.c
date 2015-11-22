@@ -17,7 +17,7 @@
 #include <util/delay.h>
 #include <string.h>
 
-char chipName[32];
+char chipName[64];
 char testResultName[128];
 uint8_t lastPulse;
 
@@ -337,7 +337,7 @@ bool TestData() {
 					}
 				}
 				break;
-			case CMD_LAST_PULSE_AND_TEST_28:	// (mask[2]) повторяет последний импульс и проверяет состояние всех пинов
+			case CMD_LAST_PULSE_AND_TEST_28:	// (mask[4]) повторяет последний импульс и проверяет состояние всех пинов
 				pulse();
 				{
 					val28_t mask;
@@ -355,6 +355,110 @@ bool TestData() {
 				}
 				break;
 				
+			case CMD_TEST_Z_16:	// (mask[2]) проверяет что пины находятся в Z-состоянии
+				{
+					val16_t mask;
+					pgm_read_val16(&mask);
+					
+					if (failureCnt == 0) {
+						uint8_t save_a = PORTA;
+						uint8_t save_b = PORTB;
+						uint8_t save_c = PORTC;
+						uint8_t save_d = PORTD;
+						
+						TesterSet16(&mask, 0);
+						if (!TesterTest16(&mask, 0)) {
+							MSG("fail-1");
+							failureCnt++;
+						} else {
+							TesterSet16(0, &mask);
+							if (!TesterTest16(0, &mask)) {
+								MSG("fail-2");
+								failureCnt++;
+							} else {
+								MSG("success");
+							}
+						}
+						PORTA = save_a;
+						PORTB = save_b;
+						PORTC = save_c;
+						PORTD = save_d;
+					}
+				}
+				break;
+
+			case CMD_TEST_Z_24:	// (mask[3]) проверяет что пины находятся в Z-состоянии
+				{
+					val24_t mask;
+					pgm_read_val24(&mask);
+					
+					if (failureCnt == 0) {
+						uint8_t save_a = PORTA;
+						uint8_t save_b = PORTB;
+						uint8_t save_c = PORTC;
+						uint8_t save_d = PORTD;
+						
+						TesterSet24(&mask, 0);
+						if (!TesterTest24(&mask, 0)) {
+							MSG("fail-1");
+							failureCnt++;
+						} else {
+							TesterSet24(0, &mask);
+							if (!TesterTest24(0, &mask)) {
+								MSG("fail-2");
+								failureCnt++;
+							} else {
+								MSG("success");
+							}
+						}
+						PORTA = save_a;
+						PORTB = save_b;
+						PORTC = save_c;
+						PORTD = save_d;						
+					}
+				}				
+				break;
+				
+			case CMD_TEST_Z_28:	// (mask[4]) проверяет что пины находятся в Z-состоянии
+				{
+					val28_t mask;
+					pgm_read_val28(&mask);
+					
+					if (failureCnt == 0) {
+						uint8_t save_a = PORTA;
+						uint8_t save_b = PORTB;
+						uint8_t save_c = PORTC;
+						uint8_t save_d = PORTD;
+						
+						TesterSet28(&mask, 0);
+						if (!TesterTest28(&mask, 0)) {
+							MSG("fail-1");
+							failureCnt++;
+						} else {
+							TesterSet28(0, &mask);
+							if (!TesterTest28(0, &mask)) {
+								MSG("fail-2");
+								failureCnt++;
+							} else {
+								MSG("success");
+							}
+						}
+						PORTA = save_a;
+						PORTB = save_b;
+						PORTC = save_c;
+						PORTD = save_d;						
+					}
+				}				
+				break;
+				
+			case CMD_TEST_OC_16:	// (mask[2]) проверяет что пины являются выходами с открытым коллектором
+				break;
+				
+			case CMD_TEST_OC_24:	// (mask[3]) проверяет что пины являются выходами с открытым коллектором
+				break;
+				
+			case CMD_TEST_OC_28:	// (mask[4]) проверяет что пины являются выходами с открытым коллектором
+				break;
 				
 			case CMD_END:				// признак окончания теста
 				return failureCnt == 0;
