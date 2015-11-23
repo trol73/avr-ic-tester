@@ -73,9 +73,10 @@ def binary_byte(b):
 
 class DataGenerator:
 
-    def __init__(self):
+    def __init__(self, suffix):
         self.commands = []
         self.size = 0
+        self.suffix = suffix
 
     def add_chip(self, name):
         compiled_name = ''
@@ -161,7 +162,7 @@ class DataGenerator:
         """
         f = open(filename, 'w')
         f.write('\n')
-        f.write('const uint8_t LOGIC_DATA[] PROGMEM = {')
+        f.write('const uint8_t LOGIC_DATA_' + self.suffix + '[] PROGMEM = {')
 
         for cmd in self.commands:
             first = True
