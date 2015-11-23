@@ -475,7 +475,7 @@ bool TestData() {
 bool TestLogic(uint8_t type) {
 	if (type == TYPE_TTL) {
 		ptr = (uint8_t*)&LOGIC_DATA_TTL[0];
-	} else if (type == TYPE_TTL) {
+	} else if (type == TYPE_CMOS) {
 		ptr = (uint8_t*)&LOGIC_DATA_CMOS[0];
 	}
 	testResultName[0] = 0;
