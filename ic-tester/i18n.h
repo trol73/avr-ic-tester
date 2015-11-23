@@ -39,12 +39,13 @@ DEFSTR(STR_DIP_14, "DIP-14");
 DEFSTR(STR_DIP_16, "DIP-16");
 DEFSTR(STR_DIP_20, "DIP-20");
 
+DEFSTR(STR_TTL, "TTL");
+DEFSTR(STR_CMOS, "CMOS");
+
 DEFSTR(STR_COPYRIGHT_DATE, "(c) 2015");
 DEFSTR(STR_COPYRIGHT_NAME, "Oleg Trifonov");
 DEFSTR(STR_COPYRIGHT_NAME_2, "Sergey Bagan");
 //                          
 
-DEFSTR(STR_ONE_SPACE_STRING, " ");
 
-
-#endif // I18N_H_
+#endif /* I18N_H_ */

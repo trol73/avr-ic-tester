@@ -9,7 +9,7 @@
 
 #include "tester_io.h"
 
-#define KEY_PRESS_TIME		100
+#define KEY_PRESS_TIME		50
 #define KEY_REPEAT_TIME		250
 
 

@@ -35,7 +35,7 @@ uint8_t screen;
 uint8_t selectedIndex;
 uint8_t status;
 
-uint8_t package;			// сколько выводов у микросхемы (ручной тест)
+uint8_t package;			// сколько выводов у микросхемы (ручной тест). тут же хранитя тип микросхемы (TTL/CMOS)
 
 
 
@@ -242,6 +242,16 @@ static void drawAboutScreen() {
 	glcd_drawCenteredStr_p(STR_COPYRIGHT_NAME_2, 40, 1);
 }
 
+
+static void drawSelectChipLogicScreen() {
+	glcd_drawCenteredStr_p(STR_TTL, 1, 1);
+	glcd_drawCenteredStr_p(STR_CMOS, 1+LINES_DY, 1);
+	glcd_drawCenteredStr_p(STR_BACK, 1+2*LINES_DY, 1);
+	
+	// выделяем текущий
+	glcd_invert_area(0, selectedIndex*LINES_DY, GLCD_LCD_WIDTH, LINES_DY);	
+}
+
 void Draw() {
 	glcd_tiny_set_font(Font5x7, 5, 7, 32, 0xff);
 	glcd_clear_buffer();
@@ -265,8 +275,11 @@ void Draw() {
 		case SCREEN_ABOUT:
 			drawAboutScreen();
 			break;
+		case SCREEN_SELECT_CHIP_TYPE:
+			drawSelectChipLogicScreen();
+			break;
 	}
-	glcd_drawCenteredStr_p(STR_ONE_SPACE_STRING, 0, 0);
+	glcd_update_bbox(0, 0, GLCD_LCD_WIDTH-1, GLCD_LCD_HEIGHT-1);	// костыль для некоторых дисплеев
 	glcd_write();
 }
 
@@ -287,8 +300,8 @@ static void handleMainMenu(uint8_t key) {
 			break;
 		case KEY_TEST:
 			if (selectedIndex == 0) {
-				screen = SCREEN_CHIP_AUTO_TEST;
-				status = STATUS_INSERT_CHIP;
+				screen = SCREEN_SELECT_CHIP_TYPE;
+				selectedIndex = 0;
 			} else if (selectedIndex == 1) {
 				screen = SCREEN_SELECT_PACKAGE;
 				selectedIndex = 0;
@@ -309,7 +322,7 @@ static bool handleChipAutoTest(uint8_t key) {
 			if (key == KEY_TEST) {
 				status = STATUS_TESTING;
 				Draw();
-				selectedIndex = TestLogic();
+				selectedIndex = TestLogic(package);
 				status = STATUS_DONE;
 			}
 			break;
@@ -317,8 +330,8 @@ static bool handleChipAutoTest(uint8_t key) {
 			return true;
 		case STATUS_DONE:
 			if (key == KEY_TEST) {
-				selectedIndex = 0;
-				screen = SCREEN_MAIN_MENU;
+				selectedIndex = package;
+				screen = SCREEN_SELECT_CHIP_TYPE;
 			} else {
 				return true;
 			}
@@ -391,7 +404,7 @@ static void handleSelectPackage(uint8_t key) {
 				status = STATUS_SETUP;
 			}
 			break;
-	}	
+	}
 }
 
 static void handleMemoryTest(uint8_t key) {
@@ -423,6 +436,36 @@ static void handleAbout(uint8_t key) {
 }
 
 
+static void handleSelectChip(uint8_t key) {
+	switch(key) {
+		case KEY_UP:
+			if (selectedIndex > 0) {
+				selectedIndex--;
+			}
+			break;
+		case KEY_DOWN:
+			if (selectedIndex < 2) {
+				selectedIndex++;
+			}
+			break;
+		case KEY_TEST:
+			if (selectedIndex == 0) {
+				package = TYPE_TTL;
+				screen = SCREEN_CHIP_AUTO_TEST;
+				status = STATUS_INSERT_CHIP;
+			} else if (selectedIndex == 1) {
+				package = TYPE_CMOS;
+				screen = SCREEN_CHIP_AUTO_TEST;
+				status = STATUS_INSERT_CHIP;
+			} else if (selectedIndex == 2) {
+				screen = SCREEN_MAIN_MENU;
+				selectedIndex = 0;
+			}
+			break;
+	}
+}
+
+
 
 void onKeyPressed(uint8_t key) {
 	switch(screen) {
@@ -445,6 +488,9 @@ void onKeyPressed(uint8_t key) {
 			break;
 		case SCREEN_ABOUT:
 			handleAbout(key);
+			break;
+		case SCREEN_SELECT_CHIP_TYPE:
+			handleSelectChip(key);
 			break;
 	}
 	Draw();	
