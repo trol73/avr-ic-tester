@@ -44,5 +44,7 @@ DEFSTR(STR_COPYRIGHT_NAME, "Oleg Trifonov");
 DEFSTR(STR_COPYRIGHT_NAME_2, "Sergey Bagan");
 //                          
 
+DEFSTR(STR_ONE_SPACE_STRING, " ");
 
-#endif /* I18N_H_ */
+
+#endif // I18N_H_

@@ -266,6 +266,7 @@ void Draw() {
 			drawAboutScreen();
 			break;
 	}
+	glcd_drawCenteredStr_p(STR_ONE_SPACE_STRING, 0, 0);
 	glcd_write();
 }
 
