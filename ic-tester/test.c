@@ -10,7 +10,8 @@
 #include "tester_io.h"
 #include "debug.h"
 
-#include "data.h"
+#include "data_ttl.h"
+#include "data_cmos.h"
 #include "ui.h"
 #include "keyboard.h"
 
@@ -471,8 +472,12 @@ bool TestData() {
 }
 
 
-bool TestLogic() {
-	ptr = (uint8_t*)&LOGIC_DATA[0];
+bool TestLogic(uint8_t type) {
+	if (type == TYPE_TTL) {
+		ptr = (uint8_t*)&LOGIC_DATA_TTL[0];
+	} else if (type == TYPE_CMOS) {
+		ptr = (uint8_t*)&LOGIC_DATA_CMOS[0];
+	}
 	testResultName[0] = 0;
 	bool result = false;
 	while (true) {

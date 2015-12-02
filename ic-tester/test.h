@@ -51,7 +51,10 @@
 
 #define CMD_END							0xff	// признак окончания теста
 
-bool TestLogic();
+#define TYPE_TTL		0
+#define TYPE_CMOS		1
+
+bool TestLogic(uint8_t type);
 
 /************************************************************************
   Выполняет тест, читая программу из буфера                            

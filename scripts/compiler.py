@@ -16,41 +16,14 @@ OPTIMIZE_LAST_PULSE_AND_TEST = True # использовать команду CM
 
 __author__ = 'trol'
 
-src = 'data.ic'
-out = '../ic-tester/data.h'
+SRC_TTL = 'data_ttl.ic'
+OUT_TTL = '../ic-tester/data_ttl.h'
 
-if len(sys.argv) == 2:
-    src = sys.argv[1]
+SRC_CMOS = 'data_cmos.ic'
+OUT_CMOS = '../ic-tester/data_cmos.h'
 
-print 'compile', src, 'to', out
-
-
-chips = []
-
-# загружаем файл
-f = open(src, 'r')
-for s in f:
-    s = s.strip()
-    l = len(s)
-    if l == 0:
-        continue
-    if l == 1 and (s[0] == '\n' or s[0] == '\r'):
-        continue
-    if s[0] == '#':
-        continue
-
-    if s[l - 1] == '\n':
-        s = s[:l - 1]
-
-    if s.startswith('CHIP['):
-        chip = Chip()
-        load_line(chip, s)
-        chips.append(chip)
-    else:
-        load_line(chips[len(chips) - 1], s)
-
-f.close()
-
+#if len(sys.argv) == 2:
+#    src = sys.argv[1]
 
 def compile_chip(chip, g):
     """
@@ -203,19 +176,54 @@ def compile_chip(chip, g):
             break
         #first_command_index
 
-g = DataGenerator()
 
-for chip in chips:
-    #chip.show()
-    compile_chip(chip, g)
+def process(src, out, suffix):
+    print 'compile', src, 'to', out
 
-g.generate(out)
+    chips = []
 
-print '-------------[Chips]--------------------'
-for chip in chips:
-    print chip.name.decode('cp1251').encode('utf8')
-print '----------------------------------------'
+    # загружаем файл
+    f = open(src, 'r')
+    for s in f:
+        s = s.strip()
+        l = len(s)
+        if l == 0:
+            continue
+        if l == 1 and (s[0] == '\n' or s[0] == '\r'):
+            continue
+        if s[0] == '#':
+            continue
+
+        if s[l - 1] == '\n':
+            s = s[:l - 1]
+
+        if s.startswith('CHIP['):
+            chip = Chip()
+            load_line(chip, s)
+            chips.append(chip)
+        else:
+            load_line(chips[len(chips) - 1], s)
+
+    f.close()
 
 
-print 'Total chips: ', len(chips)
-print 'Data size: ', g.size
+    g = DataGenerator(suffix)
+
+    for chip in chips:
+        #chip.show()
+        compile_chip(chip, g)
+
+    g.generate(out)
+
+    print '-------------[Chips]--------------------'
+    for chip in chips:
+        print chip.name.decode('cp1251').encode('utf8')
+    print '----------------------------------------'
+
+
+    print 'Total chips: ', len(chips)
+    print 'Data size: ', g.size
+
+
+process(SRC_TTL, OUT_TTL, 'TTL')
+process(SRC_CMOS, OUT_CMOS, 'CMOS')

@@ -1,5 +1,5 @@
 
-const uint8_t LOGIC_DATA[] PROGMEM = {
+const uint8_t LOGIC_DATA_TTL[] PROGMEM = {
 	'È', 'Å', '2', '3', ',', 'H', 'C', '4', '5', '2', '0', 0,
 	CMD_INIT_16, 0b11000011, 0b11000011,
 	CMD_SET_ALL_AND_TEST_16, 0b01000010, 0b11000010, 0b01000010, 0b11000010,

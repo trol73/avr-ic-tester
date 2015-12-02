@@ -71,6 +71,7 @@ int main(void) {
 
     while(1) {
 		KeyboardCheck();
+		_delay_ms(1);
 		
 
 //		glcd_invert_area(1, 10, 20, 30);		
