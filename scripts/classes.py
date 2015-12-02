@@ -12,6 +12,7 @@ class Command:
         self.lst0_2 = []            # список для маски нулевых битов (команда SET + TEST)
         self.lst1_2 = []            # список для маски единичных битов (команда SET + TEST)
         self.pin = None             # номер пина для команд PULSE
+        self.value = None           # количество повторов для команды repeat-pulse
 
     def show(self):
         if len(self.lst0_2) + len(self.lst1_2) > 0:

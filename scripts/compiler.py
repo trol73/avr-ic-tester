@@ -161,6 +161,10 @@ def compile_chip(chip, g):
             pins = cmd.lst1
             g.add_command_mask_1('CMD_TEST_OC', pins, chip.pins)
 
+        elif cmd.name == 'repeat-pulse':
+            g.add_command('CMD_REPEAT_PULSE', cmd.value)
+
+
     g.add_command('CMD_END')
     # проходимся по всем команам этой МС и выполняем оптимизации
 

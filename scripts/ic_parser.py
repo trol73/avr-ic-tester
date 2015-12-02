@@ -259,6 +259,11 @@ def load_line(chip, line):
         else:
             error('TEST-OC syntax error')
 
+    elif line.startswith("REPEAT-PULSE"):
+        cmd = Command('repeat-pulse')
+        sc = line[len('REPEAT-PULSE'):].strip()
+        cmd.value = int(sc)
+
         chip.commands.append(cmd)
 
     else:
