@@ -461,6 +461,25 @@ bool TestData() {
 			case CMD_TEST_OC_28:	// (mask[4]) проверяет что пины являются выходами с открытым коллектором
 				break;
 				
+			case CMD_REPEAT_PULSE: // (uint16) повторяет последний импульс несколько раз
+				{
+					uint16_t value;
+					pgm_read_val16(&value);
+					
+					for (uint16_t i = 0; i < value; i++) {
+						if (lastPulse < 0x80) {
+							TesterSetPin(lastPulse, 0);
+							_delay_us(1);
+							TesterSetPin(lastPulse, 1);	
+						} else {
+							TesterSetPin(lastPulse-0x80, 1);
+							_delay_us(1);
+							TesterSetPin(lastPulse-0x80, 0);					
+						}
+					}
+				}
+				break;
+				
 			case CMD_END:				// признак окончания теста
 				return failureCnt == 0;
 				
