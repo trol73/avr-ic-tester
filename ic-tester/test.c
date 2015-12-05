@@ -476,6 +476,7 @@ bool TestData() {
 							_delay_us(1);
 							TesterSetPin(lastPulse-0x80, 0);					
 						}
+						_delay_us(1);
 					}
 				}
 				break;
