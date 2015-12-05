@@ -135,7 +135,7 @@ def compile_chip(chip, g):
             g.add_command_mask_1('CMD_TEST_OC', pins, chip.pins)
 
         elif cmd.name == 'repeat-pulse':
-            g.add_command('CMD_REPEAT_PULSE', cmd.value)
+            g.add_command('CMD_REPEAT_PULSE', cmd.value & 0xff, (cmd.value >> 8) & 0xff)
 
 
     g.add_command('CMD_END')
