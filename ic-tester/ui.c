@@ -73,6 +73,8 @@ static void drawChipAutoTest() {
 			glcd_drawCenteredStr_p(STR_TESTING, 16, 1);
 			break;
 		case STATUS_DONE:
+//glcd_drawCenteredStr_p(STR_APPNAME, 15, 1);
+//return;		
 			if (selectedIndex) {
 				InitDisplay();
 				glcd_drawCenteredStr(GetDeviceName(), 0, 1);
@@ -533,7 +535,7 @@ static void glcd_drawCenteredStr(const char *str, uint8_t y, uint8_t dx) {
 		x = 0;
 	}
 	uint8_t i = 0;
-	while (1) {
+	while (len > 0) {
 		char c = str[i++];
 		if (!c) {
 			return;
@@ -543,6 +545,7 @@ static void glcd_drawCenteredStr(const char *str, uint8_t y, uint8_t dx) {
 			x = 0;
 			y += 10;
 		}
-		c++;
+		len--;
+		//c++;
 	}
 }
